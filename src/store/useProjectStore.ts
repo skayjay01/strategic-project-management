@@ -20,6 +20,9 @@ interface ProjectStore {
   removeFromTimeline: (itemId: string) => void;
   isOnTimeline: (projectId: string) => boolean;
   getCardById: (projectId: string) => ProjectCard | undefined;
+  addCard: (card: Omit<ProjectCard, 'id'>) => void;
+  updateCard: (id: string, updates: Partial<Omit<ProjectCard, 'id'>>) => void;
+  deleteCard: (id: string) => void;
 }
 
 const getDefaultStartDate = () => {
@@ -33,7 +36,7 @@ export const useProjectStore = create<ProjectStore>()(
     (set, get) => ({
       cards: sampleProjects,
       timelineItems: [],
-      viewMode: 'day' as ViewMode,
+      viewMode: 'month' as ViewMode,
       timelineStartDate: getDefaultStartDate(),
 
       setViewMode: (mode) => set({ viewMode: mode }),
@@ -107,6 +110,41 @@ export const useProjectStore = create<ProjectStore>()(
 
       getCardById: (projectId) => {
         return get().cards.find((c) => c.id === projectId);
+      },
+
+      addCard: (card) => {
+        const newCard: ProjectCard = { ...card, id: `proj-${Date.now()}` };
+        set({ cards: [...get().cards, newCard] });
+      },
+
+      updateCard: (id, updates) => {
+        const { cards, timelineItems } = get();
+        const card = cards.find((c) => c.id === id);
+        if (!card) return;
+        const updatedCards = cards.map((c) =>
+          c.id === id ? { ...c, ...updates } : c
+        );
+        // If duration changed, update the matching timeline item's endDate
+        if (updates.duration !== undefined && updates.duration !== card.duration) {
+          const updatedItems = timelineItems.map((item) => {
+            if (item.projectId !== id) return item;
+            return {
+              ...item,
+              endDate: computeEndDate(item.startDate, updates.duration!),
+            };
+          });
+          set({ cards: updatedCards, timelineItems: updatedItems });
+        } else {
+          set({ cards: updatedCards });
+        }
+      },
+
+      deleteCard: (id) => {
+        const { cards, timelineItems } = get();
+        set({
+          cards: cards.filter((c) => c.id !== id),
+          timelineItems: timelineItems.filter((item) => item.projectId !== id),
+        });
       },
     }),
     {

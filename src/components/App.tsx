@@ -9,6 +9,7 @@ import {
   closestCenter,
 } from '@dnd-kit/core';
 import { useProjectStore } from '../store/useProjectStore';
+import { calcDayFromPointerInCell } from '../lib/timelineUtils';
 import ProjectCardPanel from './sidebar/ProjectCardPanel';
 import Timeline from './timeline/Timeline';
 import DragOverlay from './shared/DragOverlay';
@@ -18,6 +19,7 @@ export default function App() {
   const addToTimeline = useProjectStore((s) => s.addToTimeline);
   const moveTimelineItem = useProjectStore((s) => s.moveTimelineItem);
   const removeFromTimeline = useProjectStore((s) => s.removeFromTimeline);
+  const viewMode = useProjectStore((s) => s.viewMode);
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -54,7 +56,20 @@ export default function App() {
 
       // Dropped on a timeline cell
       if (overData?.type === 'cell') {
-        const { date, row } = overData;
+        const row = overData.row as number;
+        let date = overData.date as string;
+
+        // Calculate day-level precision for month/week views
+        if (viewMode !== 'day') {
+          const activatorEvent = event.activatorEvent as PointerEvent;
+          const pointerX = activatorEvent.clientX + event.delta.x;
+          date = calcDayFromPointerInCell(
+            pointerX,
+            over.rect,
+            date,
+            viewMode
+          );
+        }
 
         // Sidebar card → add to timeline
         if (active.data.current?.type === 'card') {
@@ -69,7 +84,7 @@ export default function App() {
         }
       }
     },
-    [addToTimeline, moveTimelineItem, removeFromTimeline]
+    [addToTimeline, moveTimelineItem, removeFromTimeline, viewMode]
   );
 
   return (

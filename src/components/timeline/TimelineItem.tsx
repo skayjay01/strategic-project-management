@@ -3,9 +3,9 @@ import type { TimelineItem as TimelineItemType } from '../../types';
 import { useProjectStore } from '../../store/useProjectStore';
 import {
   COLUMN_WIDTHS,
+  COLUMN_COUNT,
   ROW_HEIGHT,
   getColumnIndex,
-  getSpanInColumns,
 } from '../../lib/timelineUtils';
 import { useMemo } from 'react';
 
@@ -35,14 +35,14 @@ export default function TimelineItem({ item }: Props) {
   if (!card) return null;
 
   const colWidth = COLUMN_WIDTHS[viewMode];
-  const colIndex = getColumnIndex(item.startDate, startDate, viewMode);
-  const span = getSpanInColumns(item.startDate, item.endDate, viewMode);
+  const colStart = getColumnIndex(item.startDate, startDate, viewMode);
+  const colEnd = getColumnIndex(item.endDate, startDate, viewMode);
 
-  const left = colIndex * colWidth;
-  const width = span * colWidth;
+  const left = colStart * colWidth;
+  const width = Math.max((colEnd - colStart) * colWidth, 8);
   const top = item.row * ROW_HEIGHT + 4;
 
-  if (colIndex + span < 0 || colIndex >= 90) return null;
+  if (colEnd < 0 || colStart >= COLUMN_COUNT) return null;
 
   return (
     <div
@@ -58,7 +58,7 @@ export default function TimelineItem({ item }: Props) {
       `}
       style={{
         left,
-        width: Math.max(width, colWidth),
+        width,
         top,
         height: ROW_HEIGHT - 8,
         backgroundColor: card.color,

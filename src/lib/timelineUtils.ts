@@ -6,8 +6,8 @@ import {
   startOfMonth,
   format,
   differenceInDays,
-  differenceInWeeks,
   differenceInMonths,
+  getDaysInMonth,
   parseISO,
 } from 'date-fns';
 import type { ViewMode } from '../types';
@@ -70,28 +70,39 @@ export function getColumnIndex(
   switch (viewMode) {
     case 'day':
       return differenceInDays(parsed, startDate);
-    case 'week':
-      return differenceInWeeks(parsed, startOfWeek(startDate, { weekStartsOn: 1 }));
-    case 'month':
-      return differenceInMonths(parsed, startOfMonth(startDate));
+    case 'week': {
+      const weekStart = startOfWeek(startDate, { weekStartsOn: 1 });
+      return differenceInDays(parsed, weekStart) / 7;
+    }
+    case 'month': {
+      const monthStart = startOfMonth(startDate);
+      const parsedMonthStart = startOfMonth(parsed);
+      const monthOffset = differenceInMonths(parsedMonthStart, monthStart);
+      const dayInMonth = parsed.getDate() - 1;
+      const totalDays = getDaysInMonth(parsed);
+      return monthOffset + dayInMonth / totalDays;
+    }
   }
 }
 
-export function getSpanInColumns(
-  startDateStr: string,
-  endDateStr: string,
+export function calcDayFromPointerInCell(
+  pointerX: number,
+  cellRect: { left: number; width: number },
+  cellDateStr: string,
   viewMode: ViewMode
-): number {
-  const start = parseISO(startDateStr);
-  const end = parseISO(endDateStr);
-  switch (viewMode) {
-    case 'day':
-      return Math.max(1, differenceInDays(end, start));
-    case 'week':
-      return Math.max(1, Math.ceil(differenceInDays(end, start) / 7));
-    case 'month':
-      return Math.max(1, differenceInMonths(end, start) || 1);
+): string {
+  const posInCell = Math.max(0, Math.min(0.999, (pointerX - cellRect.left) / cellRect.width));
+  const cellDate = parseISO(cellDateStr);
+  if (viewMode === 'month') {
+    const daysInMo = getDaysInMonth(cellDate);
+    const dayOffset = Math.floor(posInCell * daysInMo);
+    return format(addDays(cellDate, dayOffset), 'yyyy-MM-dd');
   }
+  if (viewMode === 'week') {
+    const dayOffset = Math.floor(posInCell * 7);
+    return format(addDays(cellDate, dayOffset), 'yyyy-MM-dd');
+  }
+  return cellDateStr;
 }
 
 export function dateFromColumnIndex(

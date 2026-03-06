@@ -41,7 +41,7 @@ export default function TimelineGrid() {
       {showTodayLine && (
         <div
           className="absolute top-0 bottom-0 w-0.5 bg-blue-500 z-20 pointer-events-none"
-          style={{ left: todayIndex * colWidth + colWidth / 2 }}
+          style={{ left: viewMode === 'day' ? todayIndex * colWidth + colWidth / 2 : todayIndex * colWidth }}
         />
       )}
     </div>
