@@ -62,7 +62,7 @@ export default function Timeline() {
     const pxPerDay = viewMode === 'day' ? colWidth
       : viewMode === 'week' ? colWidth / 7
       : colWidth / 30;
-    const daysDelta = Math.round(-dx / pxPerDay);
+    const daysDelta = Math.round(dx / pxPerDay);
 
     if (daysDelta === panRef.current.lastDaysDelta) return;
     panRef.current.lastDaysDelta = daysDelta;
