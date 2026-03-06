@@ -75,6 +75,7 @@ export default function ProjectCardPanel() {
       {showModal && (
         <CardEditorModal
           card={editingCard}
+          defaultColorIndex={cards.length}
           onSave={handleSave}
           onClose={() => setShowModal(false)}
         />

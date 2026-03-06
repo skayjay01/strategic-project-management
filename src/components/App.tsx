@@ -1,14 +1,11 @@
-import { useState, useCallback, useEffect, useRef } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import {
   DndContext,
   type DragEndEvent,
   type DragStartEvent,
-  type DragMoveEvent,
-  type CollisionDetection,
   PointerSensor,
   useSensor,
   useSensors,
-  pointerWithin,
   closestCenter,
 } from '@dnd-kit/core';
 import { useProjectStore } from '../store/useProjectStore';
@@ -17,15 +14,8 @@ import ProjectCardPanel from './sidebar/ProjectCardPanel';
 import Timeline from './timeline/Timeline';
 import DragOverlay from './shared/DragOverlay';
 
-const collisionDetection: CollisionDetection = (args) => {
-  const pointer = pointerWithin(args);
-  if (pointer.length > 0) return pointer;
-  return closestCenter(args);
-};
-
 export default function App() {
   const [activeId, setActiveId] = useState<string | null>(null);
-  const pointerPos = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
   const addToTimeline = useProjectStore((s) => s.addToTimeline);
   const moveTimelineItem = useProjectStore((s) => s.moveTimelineItem);
   const removeFromTimeline = useProjectStore((s) => s.removeFromTimeline);
@@ -38,15 +28,6 @@ export default function App() {
     loadFromSupabase();
   }, [loadFromSupabase]);
 
-  // Track the real pointer position at all times during drag
-  useEffect(() => {
-    const handler = (e: PointerEvent) => {
-      pointerPos.current = { x: e.clientX, y: e.clientY };
-    };
-    window.addEventListener('pointermove', handler);
-    return () => window.removeEventListener('pointermove', handler);
-  }, []);
-
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: { distance: 5 },
@@ -55,18 +36,6 @@ export default function App() {
 
   const handleDragStart = useCallback((event: DragStartEvent) => {
     setActiveId(event.active.id as string);
-    // Capture initial pointer position from activator event
-    const e = event.activatorEvent as PointerEvent;
-    pointerPos.current = { x: e.clientX, y: e.clientY };
-  }, []);
-
-  const handleDragMove = useCallback((event: DragMoveEvent) => {
-    // Update pointer position from activator + delta
-    const e = event.activatorEvent as PointerEvent;
-    pointerPos.current = {
-      x: e.clientX + event.delta.x,
-      y: e.clientY + event.delta.y,
-    };
   }, []);
 
   const handleDragEnd = useCallback(
@@ -90,13 +59,18 @@ export default function App() {
         return;
       }
 
-      if (overData?.type === 'cell') {
+      // Dropped on the timeline grid
+      if (overData?.type === 'timeline-grid') {
         const gridEl = document.querySelector('[data-timeline-grid]');
         if (!gridEl) return;
 
+        // Use activatorEvent + delta for pointer position
+        const e = event.activatorEvent as PointerEvent;
+        const px = e.clientX + event.delta.x;
+        const py = e.clientY + event.delta.y;
         const gridRect = gridEl.getBoundingClientRect();
-        const xInGrid = pointerPos.current.x - gridRect.left;
-        const yInGrid = pointerPos.current.y - gridRect.top;
+        const xInGrid = px - gridRect.left;
+        const yInGrid = py - gridRect.top;
 
         const startDate = new Date(timelineStartDate + 'T00:00:00');
         const date = dateFromGridPixel(xInGrid, startDate, viewMode);
@@ -104,12 +78,8 @@ export default function App() {
 
         if (active.data.current?.type === 'card') {
           addToTimeline(active.data.current.projectId, date, row);
-          return;
-        }
-
-        if (active.data.current?.type === 'timeline-item') {
+        } else if (active.data.current?.type === 'timeline-item') {
           moveTimelineItem(active.data.current.itemId, date, row);
-          return;
         }
       }
     },
@@ -127,9 +97,8 @@ export default function App() {
   return (
     <DndContext
       sensors={sensors}
-      collisionDetection={collisionDetection}
+      collisionDetection={closestCenter}
       onDragStart={handleDragStart}
-      onDragMove={handleDragMove}
       onDragEnd={handleDragEnd}
     >
       <div className="h-screen flex bg-slate-50">

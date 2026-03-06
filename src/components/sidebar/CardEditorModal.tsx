@@ -9,14 +9,15 @@ const PRESET_COLORS = [
 
 interface Props {
   card: ProjectCard | null; // null = creating new
+  defaultColorIndex?: number;
   onSave: (data: Omit<ProjectCard, 'id'>) => void;
   onClose: () => void;
 }
 
-export default function CardEditorModal({ card, onSave, onClose }: Props) {
+export default function CardEditorModal({ card, defaultColorIndex = 0, onSave, onClose }: Props) {
   const [title, setTitle] = useState('');
   const [duration, setDuration] = useState(30);
-  const [color, setColor] = useState(PRESET_COLORS[0]);
+  const [color, setColor] = useState(PRESET_COLORS[defaultColorIndex % PRESET_COLORS.length]);
   const [description, setDescription] = useState('');
 
   useEffect(() => {

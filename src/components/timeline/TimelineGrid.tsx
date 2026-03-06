@@ -1,5 +1,5 @@
 import { useMemo, useState, useEffect, useCallback, useRef } from 'react';
-import { useDndContext } from '@dnd-kit/core';
+import { useDroppable, useDndContext } from '@dnd-kit/core';
 import { useProjectStore } from '../../store/useProjectStore';
 import TimelineRow from './TimelineRow';
 import TimelineItemComponent from './TimelineItem';
@@ -20,6 +20,12 @@ export default function TimelineGrid() {
   const [indicator, setIndicator] = useState<{ x: number; row: number; date: string } | null>(null);
   const gridRef = useRef<HTMLDivElement>(null);
   const [containerHeight, setContainerHeight] = useState(0);
+
+  // Single droppable for the entire grid
+  const { setNodeRef } = useDroppable({
+    id: 'timeline-grid',
+    data: { type: 'timeline-grid' },
+  });
 
   const startDate = useMemo(
     () => new Date(timelineStartDate + 'T00:00:00'),
@@ -48,14 +54,12 @@ export default function TimelineGrid() {
   const handlePointerMove = useCallback(
     (e: React.PointerEvent) => {
       if (!active) return;
-      const gridEl = e.currentTarget;
-      const gridRect = gridEl.getBoundingClientRect();
+      const gridRect = e.currentTarget.getBoundingClientRect();
       const xInGrid = e.clientX - gridRect.left;
       const yInGrid = e.clientY - gridRect.top;
       const row = Math.max(0, Math.floor(yInGrid / ROW_HEIGHT));
       const date = dateFromGridPixel(xInGrid, startDate, viewMode);
 
-      // Snap indicator to exact day position
       const pxPerDay = viewMode === 'day' ? colWidth
         : viewMode === 'week' ? colWidth / 7
         : colWidth / 30;
@@ -74,9 +78,18 @@ export default function TimelineGrid() {
     if (!active) setIndicator(null);
   }, [active]);
 
+  // Merge refs: one for useDroppable, one for our measurements
+  const mergedRef = useCallback(
+    (node: HTMLDivElement | null) => {
+      setNodeRef(node);
+      (gridRef as React.MutableRefObject<HTMLDivElement | null>).current = node;
+    },
+    [setNodeRef]
+  );
+
   return (
     <div
-      ref={gridRef}
+      ref={mergedRef}
       data-timeline-grid
       className="relative"
       style={{ width: totalWidth, minHeight: containerHeight || undefined }}
@@ -84,7 +97,7 @@ export default function TimelineGrid() {
       onPointerLeave={handlePointerLeave}
     >
       {Array.from({ length: rowCount }, (_, i) => (
-        <TimelineRow key={i} rowIndex={i} />
+        <TimelineRow key={i} />
       ))}
 
       {timelineItems.map((item) => (
@@ -100,17 +113,14 @@ export default function TimelineGrid() {
 
       {active && indicator && (
         <>
-          {/* Vertical drop indicator line */}
           <div
             className="absolute top-0 bottom-0 w-0.5 bg-blue-400 z-30 pointer-events-none"
             style={{ left: indicator.x }}
           />
-          {/* Row highlight */}
           <div
             className="absolute left-0 right-0 bg-blue-100/30 z-0 pointer-events-none"
             style={{ top: indicator.row * ROW_HEIGHT, height: ROW_HEIGHT }}
           />
-          {/* Date label */}
           <div
             className="absolute z-30 pointer-events-none bg-blue-600 text-white text-[10px] font-medium px-1.5 py-0.5 rounded -translate-x-1/2"
             style={{ left: indicator.x, top: indicator.row * ROW_HEIGHT - 20 }}

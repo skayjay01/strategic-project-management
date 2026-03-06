@@ -1,4 +1,3 @@
-import { useDroppable } from '@dnd-kit/core';
 import { useMemo } from 'react';
 import { useProjectStore } from '../../store/useProjectStore';
 import {
@@ -7,40 +6,8 @@ import {
   ROW_HEIGHT,
   isToday,
 } from '../../lib/timelineUtils';
-import { format } from 'date-fns';
 
-interface Props {
-  rowIndex: number;
-}
-
-function DroppableCell({ dateStr, rowIndex, colWidth, today }: {
-  dateStr: string;
-  rowIndex: number;
-  colWidth: number;
-  today: boolean;
-}) {
-  const { setNodeRef } = useDroppable({
-    id: `cell-${dateStr}-${rowIndex}`,
-    data: {
-      type: 'cell',
-      date: dateStr,
-      row: rowIndex,
-    },
-  });
-
-  return (
-    <div
-      ref={setNodeRef}
-      className={`
-        shrink-0 border-r border-b border-slate-100
-        ${today ? 'bg-blue-50/30' : ''}
-      `}
-      style={{ width: colWidth, height: ROW_HEIGHT }}
-    />
-  );
-}
-
-export default function TimelineRow({ rowIndex }: Props) {
+export default function TimelineRow() {
   const viewMode = useProjectStore((s) => s.viewMode);
   const timelineStartDate = useProjectStore((s) => s.timelineStartDate);
 
@@ -57,12 +24,10 @@ export default function TimelineRow({ rowIndex }: Props) {
   return (
     <div className="flex">
       {columns.map((date, i) => (
-        <DroppableCell
+        <div
           key={i}
-          dateStr={format(date, 'yyyy-MM-dd')}
-          rowIndex={rowIndex}
-          colWidth={colWidth}
-          today={isToday(date)}
+          className={`shrink-0 border-r border-b border-slate-100 ${isToday(date) ? 'bg-blue-50/30' : ''}`}
+          style={{ width: colWidth, height: ROW_HEIGHT }}
         />
       ))}
     </div>
