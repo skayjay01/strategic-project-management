@@ -13,9 +13,10 @@ import { differenceInDays, parseISO, format, addDays } from 'date-fns';
 
 interface Props {
   item: TimelineItemType;
+  isOverlapping?: boolean;
 }
 
-export default function TimelineItem({ item }: Props) {
+export default function TimelineItem({ item, isOverlapping }: Props) {
   const viewMode = useProjectStore((s) => s.viewMode);
   const timelineStartDate = useProjectStore((s) => s.timelineStartDate);
   const card = useProjectStore((s) => s.getCardById(item.projectId));
@@ -117,6 +118,7 @@ export default function TimelineItem({ item }: Props) {
         transition-shadow duration-150
         hover:shadow-md hover:brightness-105
         ${isDragging ? 'opacity-50 shadow-lg z-50' : 'z-10'}
+        ${isOverlapping ? 'ring-2 ring-red-500 ring-offset-1' : ''}
       `}
       style={{
         left,

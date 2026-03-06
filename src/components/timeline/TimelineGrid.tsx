@@ -51,6 +51,22 @@ export default function TimelineGrid() {
   const todayIndex = getTodayColumnIndex(startDate, viewMode);
   const showTodayLine = todayIndex >= 0 && todayIndex < COLUMN_COUNT;
 
+  // Detect overlapping items (same row, overlapping date ranges)
+  const overlappingIds = useMemo(() => {
+    const ids = new Set<string>();
+    for (let i = 0; i < timelineItems.length; i++) {
+      for (let j = i + 1; j < timelineItems.length; j++) {
+        const a = timelineItems[i];
+        const b = timelineItems[j];
+        if (a.row === b.row && a.startDate < b.endDate && b.startDate < a.endDate) {
+          ids.add(a.id);
+          ids.add(b.id);
+        }
+      }
+    }
+    return ids;
+  }, [timelineItems]);
+
   const handlePointerMove = useCallback(
     (e: React.PointerEvent) => {
       if (!active) return;
@@ -115,7 +131,7 @@ export default function TimelineGrid() {
       ))}
 
       {timelineItems.map((item) => (
-        <TimelineItemComponent key={item.id} item={item} />
+        <TimelineItemComponent key={item.id} item={item} isOverlapping={overlappingIds.has(item.id)} />
       ))}
 
       {showTodayLine && (
