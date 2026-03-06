@@ -1,4 +1,4 @@
-import { useMemo, useState, useEffect, useCallback } from 'react';
+import { useMemo, useState, useEffect, useCallback, useRef } from 'react';
 import { useDndContext } from '@dnd-kit/core';
 import { useProjectStore } from '../../store/useProjectStore';
 import TimelineRow from './TimelineRow';
@@ -12,22 +12,33 @@ import {
 } from '../../lib/timelineUtils';
 import { format } from 'date-fns';
 
-const MIN_ROWS = 5;
-
 export default function TimelineGrid() {
   const timelineItems = useProjectStore((s) => s.timelineItems);
   const viewMode = useProjectStore((s) => s.viewMode);
   const timelineStartDate = useProjectStore((s) => s.timelineStartDate);
   const { active } = useDndContext();
   const [indicator, setIndicator] = useState<{ x: number; row: number; date: string } | null>(null);
+  const gridRef = useRef<HTMLDivElement>(null);
+  const [containerHeight, setContainerHeight] = useState(0);
 
   const startDate = useMemo(
     () => new Date(timelineStartDate + 'T00:00:00'),
     [timelineStartDate]
   );
 
+  useEffect(() => {
+    const el = gridRef.current?.parentElement;
+    if (!el) return;
+    const measure = () => setContainerHeight(el.clientHeight);
+    measure();
+    const observer = new ResizeObserver(measure);
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+
   const maxRow = timelineItems.reduce((max, item) => Math.max(max, item.row), -1);
-  const rowCount = Math.max(MIN_ROWS, maxRow + 2);
+  const minRowsFromHeight = Math.max(1, Math.floor(containerHeight / ROW_HEIGHT));
+  const rowCount = Math.max(minRowsFromHeight, maxRow + 2);
   const colWidth = COLUMN_WIDTHS[viewMode];
   const totalWidth = colWidth * COLUMN_COUNT;
 
@@ -65,9 +76,10 @@ export default function TimelineGrid() {
 
   return (
     <div
+      ref={gridRef}
       data-timeline-grid
       className="relative"
-      style={{ width: totalWidth }}
+      style={{ width: totalWidth, minHeight: containerHeight || undefined }}
       onPointerMove={handlePointerMove}
       onPointerLeave={handlePointerLeave}
     >

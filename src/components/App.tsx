@@ -1,8 +1,9 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import {
   DndContext,
   type DragEndEvent,
   type DragStartEvent,
+  type DragMoveEvent,
   type CollisionDetection,
   PointerSensor,
   useSensor,
@@ -24,6 +25,7 @@ const collisionDetection: CollisionDetection = (args) => {
 
 export default function App() {
   const [activeId, setActiveId] = useState<string | null>(null);
+  const pointerPos = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
   const addToTimeline = useProjectStore((s) => s.addToTimeline);
   const moveTimelineItem = useProjectStore((s) => s.moveTimelineItem);
   const removeFromTimeline = useProjectStore((s) => s.removeFromTimeline);
@@ -36,6 +38,15 @@ export default function App() {
     loadFromSupabase();
   }, [loadFromSupabase]);
 
+  // Track the real pointer position at all times during drag
+  useEffect(() => {
+    const handler = (e: PointerEvent) => {
+      pointerPos.current = { x: e.clientX, y: e.clientY };
+    };
+    window.addEventListener('pointermove', handler);
+    return () => window.removeEventListener('pointermove', handler);
+  }, []);
+
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: { distance: 5 },
@@ -44,6 +55,18 @@ export default function App() {
 
   const handleDragStart = useCallback((event: DragStartEvent) => {
     setActiveId(event.active.id as string);
+    // Capture initial pointer position from activator event
+    const e = event.activatorEvent as PointerEvent;
+    pointerPos.current = { x: e.clientX, y: e.clientY };
+  }, []);
+
+  const handleDragMove = useCallback((event: DragMoveEvent) => {
+    // Update pointer position from activator + delta
+    const e = event.activatorEvent as PointerEvent;
+    pointerPos.current = {
+      x: e.clientX + event.delta.x,
+      y: e.clientY + event.delta.y,
+    };
   }, []);
 
   const handleDragEnd = useCallback(
@@ -60,7 +83,6 @@ export default function App() {
 
       const overData = over.data.current;
 
-      // Dropped on sidebar -> remove from timeline
       if (overData?.type === 'sidebar') {
         if (active.data.current?.type === 'timeline-item') {
           removeFromTimeline(active.data.current.itemId);
@@ -68,18 +90,13 @@ export default function App() {
         return;
       }
 
-      // Dropped on a timeline cell -> compute exact position from pointer
       if (overData?.type === 'cell') {
         const gridEl = document.querySelector('[data-timeline-grid]');
         if (!gridEl) return;
 
-        const activatorEvent = event.activatorEvent as PointerEvent;
-        const pointerX = activatorEvent.clientX + event.delta.x;
-        const pointerY = activatorEvent.clientY + event.delta.y;
         const gridRect = gridEl.getBoundingClientRect();
-
-        const xInGrid = pointerX - gridRect.left;
-        const yInGrid = pointerY - gridRect.top;
+        const xInGrid = pointerPos.current.x - gridRect.left;
+        const yInGrid = pointerPos.current.y - gridRect.top;
 
         const startDate = new Date(timelineStartDate + 'T00:00:00');
         const date = dateFromGridPixel(xInGrid, startDate, viewMode);
@@ -112,6 +129,7 @@ export default function App() {
       sensors={sensors}
       collisionDetection={collisionDetection}
       onDragStart={handleDragStart}
+      onDragMove={handleDragMove}
       onDragEnd={handleDragEnd}
     >
       <div className="h-screen flex bg-slate-50">
