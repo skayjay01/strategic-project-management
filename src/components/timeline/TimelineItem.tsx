@@ -109,6 +109,7 @@ export default function TimelineItem({ item }: Props) {
       ref={setNodeRef}
       {...listeners}
       {...attributes}
+      data-draggable
       title={`${card.title} (${currentDuration}d)\n${item.startDate} — ${item.endDate}`}
       className={`
         group/item absolute rounded-md px-2 py-1 cursor-grab active:cursor-grabbing
