@@ -21,7 +21,6 @@ export default function TimelineItem({ item, isOverlapping }: Props) {
   const timelineStartDate = useProjectStore((s) => s.timelineStartDate);
   const card = useProjectStore((s) => s.getCardById(item.projectId));
   const updateCard = useProjectStore((s) => s.updateCard);
-  const setEditingCardId = useProjectStore((s) => s.setEditingCardId);
 
   const resizeRef = useRef<{
     startX: number;
@@ -112,7 +111,6 @@ export default function TimelineItem({ item, isOverlapping }: Props) {
       {...listeners}
       {...attributes}
       data-draggable
-      onDoubleClick={() => setEditingCardId(item.projectId)}
       title={`${card.title} (${currentDuration}d)\n${item.startDate} — ${item.endDate}`}
       className={`
         group/item absolute rounded-md px-2 py-1 cursor-grab active:cursor-grabbing
