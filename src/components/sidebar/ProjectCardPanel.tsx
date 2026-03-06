@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useDroppable } from '@dnd-kit/core';
 import type { ProjectCard as ProjectCardType } from '../../types';
 import { useProjectStore } from '../../store/useProjectStore';
@@ -10,8 +10,21 @@ export default function ProjectCardPanel() {
   const cards = useProjectStore((s) => s.cards);
   const addCard = useProjectStore((s) => s.addCard);
   const updateCard = useProjectStore((s) => s.updateCard);
+  const editingCardId = useProjectStore((s) => s.editingCardId);
+  const setEditingCardId = useProjectStore((s) => s.setEditingCardId);
   const [editingCard, setEditingCard] = useState<ProjectCardType | null>(null);
   const [showModal, setShowModal] = useState(false);
+
+  useEffect(() => {
+    if (editingCardId) {
+      const card = cards.find((c) => c.id === editingCardId);
+      if (card) {
+        setEditingCard(card);
+        setShowModal(true);
+      }
+      setEditingCardId(null);
+    }
+  }, [editingCardId, cards, setEditingCardId]);
 
   const { setNodeRef, isOver } = useDroppable({
     id: 'sidebar',

@@ -10,7 +10,9 @@ interface ProjectStore {
   viewMode: ViewMode;
   timelineStartDate: string;
   loaded: boolean;
+  editingCardId: string | null;
 
+  setEditingCardId: (id: string | null) => void;
   loadFromSupabase: () => Promise<void>;
   setViewMode: (mode: ViewMode) => void;
   setTimelineStartDate: (date: string) => void;
@@ -38,6 +40,9 @@ export const useProjectStore = create<ProjectStore>()((set, get) => ({
   viewMode: 'month' as ViewMode,
   timelineStartDate: getDefaultStartDate(),
   loaded: false,
+  editingCardId: null,
+
+  setEditingCardId: (id) => set({ editingCardId: id }),
 
   loadFromSupabase: async () => {
     const [cardsRes, itemsRes] = await Promise.all([
