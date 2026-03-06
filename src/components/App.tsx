@@ -10,17 +10,17 @@ import {
   pointerWithin,
   closestCenter,
 } from '@dnd-kit/core';
+import { useProjectStore } from '../store/useProjectStore';
+import { dateFromGridPixel, ROW_HEIGHT } from '../lib/timelineUtils';
+import ProjectCardPanel from './sidebar/ProjectCardPanel';
+import Timeline from './timeline/Timeline';
+import DragOverlay from './shared/DragOverlay';
 
 const collisionDetection: CollisionDetection = (args) => {
   const pointer = pointerWithin(args);
   if (pointer.length > 0) return pointer;
   return closestCenter(args);
 };
-import { useProjectStore } from '../store/useProjectStore';
-import { calcDayFromPointerInCell } from '../lib/timelineUtils';
-import ProjectCardPanel from './sidebar/ProjectCardPanel';
-import Timeline from './timeline/Timeline';
-import DragOverlay from './shared/DragOverlay';
 
 export default function App() {
   const [activeId, setActiveId] = useState<string | null>(null);
@@ -28,6 +28,7 @@ export default function App() {
   const moveTimelineItem = useProjectStore((s) => s.moveTimelineItem);
   const removeFromTimeline = useProjectStore((s) => s.removeFromTimeline);
   const viewMode = useProjectStore((s) => s.viewMode);
+  const timelineStartDate = useProjectStore((s) => s.timelineStartDate);
   const loaded = useProjectStore((s) => s.loaded);
   const loadFromSupabase = useProjectStore((s) => s.loadFromSupabase);
 
@@ -51,7 +52,6 @@ export default function App() {
       const { active, over } = event;
 
       if (!over) {
-        // Dropped outside - if it was a timeline item, remove it
         if (active.data.current?.type === 'timeline-item') {
           removeFromTimeline(active.data.current.itemId);
         }
@@ -60,7 +60,7 @@ export default function App() {
 
       const overData = over.data.current;
 
-      // Dropped on sidebar → remove from timeline
+      // Dropped on sidebar -> remove from timeline
       if (overData?.type === 'sidebar') {
         if (active.data.current?.type === 'timeline-item') {
           removeFromTimeline(active.data.current.itemId);
@@ -68,37 +68,35 @@ export default function App() {
         return;
       }
 
-      // Dropped on a timeline cell
+      // Dropped on a timeline cell -> compute exact position from pointer
       if (overData?.type === 'cell') {
-        const row = overData.row as number;
-        let date = overData.date as string;
+        const gridEl = document.querySelector('[data-timeline-grid]');
+        if (!gridEl) return;
 
-        // Calculate day-level precision for month/week views
-        if (viewMode !== 'day') {
-          const activatorEvent = event.activatorEvent as PointerEvent;
-          const pointerX = activatorEvent.clientX + event.delta.x;
-          date = calcDayFromPointerInCell(
-            pointerX,
-            over.rect,
-            date,
-            viewMode
-          );
-        }
+        const activatorEvent = event.activatorEvent as PointerEvent;
+        const pointerX = activatorEvent.clientX + event.delta.x;
+        const pointerY = activatorEvent.clientY + event.delta.y;
+        const gridRect = gridEl.getBoundingClientRect();
 
-        // Sidebar card → add to timeline
+        const xInGrid = pointerX - gridRect.left;
+        const yInGrid = pointerY - gridRect.top;
+
+        const startDate = new Date(timelineStartDate + 'T00:00:00');
+        const date = dateFromGridPixel(xInGrid, startDate, viewMode);
+        const row = Math.max(0, Math.floor(yInGrid / ROW_HEIGHT));
+
         if (active.data.current?.type === 'card') {
           addToTimeline(active.data.current.projectId, date, row);
           return;
         }
 
-        // Timeline item → move
         if (active.data.current?.type === 'timeline-item') {
           moveTimelineItem(active.data.current.itemId, date, row);
           return;
         }
       }
     },
-    [addToTimeline, moveTimelineItem, removeFromTimeline, viewMode]
+    [addToTimeline, moveTimelineItem, removeFromTimeline, viewMode, timelineStartDate]
   );
 
   if (!loaded) {

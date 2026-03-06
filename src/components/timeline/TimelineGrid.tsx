@@ -29,7 +29,7 @@ export default function TimelineGrid() {
   const showTodayLine = todayIndex >= 0 && todayIndex < COLUMN_COUNT;
 
   return (
-    <div className="relative" style={{ width: totalWidth }}>
+    <div data-timeline-grid className="relative" style={{ width: totalWidth }}>
       {Array.from({ length: rowCount }, (_, i) => (
         <TimelineRow key={i} rowIndex={i} />
       ))}

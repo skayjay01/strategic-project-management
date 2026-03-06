@@ -85,24 +85,29 @@ export function getColumnIndex(
   }
 }
 
-export function calcDayFromPointerInCell(
-  pointerX: number,
-  cellRect: { left: number; width: number },
-  cellDateStr: string,
+export function dateFromGridPixel(
+  xInGrid: number,
+  startDate: Date,
   viewMode: ViewMode
 ): string {
-  const posInCell = Math.max(0, Math.min(0.999, (pointerX - cellRect.left) / cellRect.width));
-  const cellDate = parseISO(cellDateStr);
-  if (viewMode === 'month') {
-    const daysInMo = getDaysInMonth(cellDate);
-    const dayOffset = Math.floor(posInCell * daysInMo);
-    return format(addDays(cellDate, dayOffset), 'yyyy-MM-dd');
+  const colWidth = COLUMN_WIDTHS[viewMode];
+  if (viewMode === 'day') {
+    const colIndex = Math.max(0, Math.floor(xInGrid / colWidth));
+    return format(addDays(startDate, colIndex), 'yyyy-MM-dd');
   }
   if (viewMode === 'week') {
-    const dayOffset = Math.floor(posInCell * 7);
-    return format(addDays(cellDate, dayOffset), 'yyyy-MM-dd');
+    const weekStart = startOfWeek(startDate, { weekStartsOn: 1 });
+    const dayIndex = Math.max(0, Math.floor(xInGrid / (colWidth / 7)));
+    return format(addDays(weekStart, dayIndex), 'yyyy-MM-dd');
   }
-  return cellDateStr;
+  // month
+  const monthStart = startOfMonth(startDate);
+  const colIndex = Math.max(0, Math.floor(xInGrid / colWidth));
+  const posInCol = (xInGrid - colIndex * colWidth) / colWidth;
+  const colDate = addMonths(monthStart, colIndex);
+  const daysInMo = getDaysInMonth(colDate);
+  const dayOffset = Math.min(daysInMo - 1, Math.max(0, Math.floor(posInCol * daysInMo)));
+  return format(addDays(colDate, dayOffset), 'yyyy-MM-dd');
 }
 
 export function dateFromColumnIndex(
