@@ -16,7 +16,7 @@ export default function TimelineGrid() {
   const timelineItems = useProjectStore((s) => s.timelineItems);
   const viewMode = useProjectStore((s) => s.viewMode);
   const timelineStartDate = useProjectStore((s) => s.timelineStartDate);
-  const { active } = useDndContext();
+  const { active, activatorEvent } = useDndContext();
   const [indicator, setIndicator] = useState<{ x: number; row: number; date: string } | null>(null);
   const gridRef = useRef<HTMLDivElement>(null);
   const [containerHeight, setContainerHeight] = useState(0);
@@ -55,8 +55,22 @@ export default function TimelineGrid() {
     (e: React.PointerEvent) => {
       if (!active) return;
       const gridRect = e.currentTarget.getBoundingClientRect();
-      const xInGrid = e.clientX - gridRect.left;
-      const yInGrid = e.clientY - gridRect.top;
+
+      // Adjust for grab offset so indicator matches overlay's left edge
+      const initialRect = active.rect.current.initial;
+      const activator = activatorEvent as PointerEvent | null;
+      let xInGrid: number;
+      let yInGrid: number;
+      if (initialRect && activator) {
+        const grabOffsetX = activator.clientX - initialRect.left;
+        const grabOffsetY = activator.clientY - initialRect.top;
+        xInGrid = (e.clientX - grabOffsetX) - gridRect.left;
+        yInGrid = (e.clientY - grabOffsetY) - gridRect.top;
+      } else {
+        xInGrid = e.clientX - gridRect.left;
+        yInGrid = e.clientY - gridRect.top;
+      }
+
       const row = Math.max(0, Math.floor(yInGrid / ROW_HEIGHT));
       const date = dateFromGridPixel(xInGrid, startDate, viewMode);
 
@@ -67,7 +81,7 @@ export default function TimelineGrid() {
 
       setIndicator({ x: snappedX, row, date });
     },
-    [active, startDate, viewMode, colWidth]
+    [active, activatorEvent, startDate, viewMode, colWidth]
   );
 
   const handlePointerLeave = useCallback(() => {

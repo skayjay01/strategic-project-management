@@ -64,10 +64,17 @@ export default function App() {
         const gridEl = document.querySelector('[data-timeline-grid]');
         if (!gridEl) return;
 
-        // Use activatorEvent + delta for pointer position
+        // Use overlay position (element's left edge + delta), not raw pointer
+        const initialRect = event.active.rect.current.initial;
         const e = event.activatorEvent as PointerEvent;
-        const px = e.clientX + event.delta.x;
-        const py = e.clientY + event.delta.y;
+        let px: number, py: number;
+        if (initialRect) {
+          px = initialRect.left + event.delta.x;
+          py = initialRect.top + event.delta.y;
+        } else {
+          px = e.clientX + event.delta.x;
+          py = e.clientY + event.delta.y;
+        }
         const gridRect = gridEl.getBoundingClientRect();
         const xInGrid = px - gridRect.left;
         const yInGrid = py - gridRect.top;
