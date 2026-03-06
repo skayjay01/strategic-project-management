@@ -36,11 +36,8 @@ export default function CardEditorModal({ card, onSave, onClose }: Props) {
   };
 
   return (
-    <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center" onClick={onClose}>
-      <div
-        className="bg-white rounded-xl shadow-2xl w-96 max-w-[90vw]"
-        onClick={(e) => e.stopPropagation()}
-      >
+    <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center">
+      <div className="bg-white rounded-xl shadow-2xl w-96 max-w-[90vw]">
         <div className="flex items-center justify-between p-4 border-b border-slate-200">
           <h3 className="text-sm font-bold text-slate-800">
             {card ? 'Edit Project' : 'New Project'}
