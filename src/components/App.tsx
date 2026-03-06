@@ -1,13 +1,21 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import {
   DndContext,
   type DragEndEvent,
   type DragStartEvent,
+  type CollisionDetection,
   PointerSensor,
   useSensor,
   useSensors,
+  pointerWithin,
   closestCenter,
 } from '@dnd-kit/core';
+
+const collisionDetection: CollisionDetection = (args) => {
+  const pointer = pointerWithin(args);
+  if (pointer.length > 0) return pointer;
+  return closestCenter(args);
+};
 import { useProjectStore } from '../store/useProjectStore';
 import { calcDayFromPointerInCell } from '../lib/timelineUtils';
 import ProjectCardPanel from './sidebar/ProjectCardPanel';
@@ -20,6 +28,12 @@ export default function App() {
   const moveTimelineItem = useProjectStore((s) => s.moveTimelineItem);
   const removeFromTimeline = useProjectStore((s) => s.removeFromTimeline);
   const viewMode = useProjectStore((s) => s.viewMode);
+  const loaded = useProjectStore((s) => s.loaded);
+  const loadFromSupabase = useProjectStore((s) => s.loadFromSupabase);
+
+  useEffect(() => {
+    loadFromSupabase();
+  }, [loadFromSupabase]);
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -87,10 +101,18 @@ export default function App() {
     [addToTimeline, moveTimelineItem, removeFromTimeline, viewMode]
   );
 
+  if (!loaded) {
+    return (
+      <div className="h-screen flex items-center justify-center bg-slate-50">
+        <p className="text-sm text-slate-500">Loading projects...</p>
+      </div>
+    );
+  }
+
   return (
     <DndContext
       sensors={sensors}
-      collisionDetection={closestCenter}
+      collisionDetection={collisionDetection}
       onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}
     >

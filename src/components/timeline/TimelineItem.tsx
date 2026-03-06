@@ -1,3 +1,4 @@
+import { useCallback, useRef } from 'react';
 import { useDraggable } from '@dnd-kit/core';
 import type { TimelineItem as TimelineItemType } from '../../types';
 import { useProjectStore } from '../../store/useProjectStore';
@@ -8,6 +9,7 @@ import {
   getColumnIndex,
 } from '../../lib/timelineUtils';
 import { useMemo } from 'react';
+import { differenceInDays, parseISO, format, addDays } from 'date-fns';
 
 interface Props {
   item: TimelineItemType;
@@ -17,6 +19,12 @@ export default function TimelineItem({ item }: Props) {
   const viewMode = useProjectStore((s) => s.viewMode);
   const timelineStartDate = useProjectStore((s) => s.timelineStartDate);
   const card = useProjectStore((s) => s.getCardById(item.projectId));
+  const updateCard = useProjectStore((s) => s.updateCard);
+
+  const resizeRef = useRef<{
+    startX: number;
+    startDuration: number;
+  } | null>(null);
 
   const startDate = useMemo(
     () => new Date(timelineStartDate + 'T00:00:00'),
@@ -32,6 +40,56 @@ export default function TimelineItem({ item }: Props) {
     },
   });
 
+  const handleResizeStart = useCallback(
+    (e: React.PointerEvent) => {
+      e.stopPropagation();
+      e.preventDefault();
+      if (!card) return;
+
+      resizeRef.current = { startX: e.clientX, startDuration: card.duration };
+
+      const colWidth = COLUMN_WIDTHS[viewMode];
+      // px per day depends on view mode
+      const pxPerDay = viewMode === 'day' ? colWidth
+        : viewMode === 'week' ? colWidth / 7
+        : colWidth / 30;
+
+      const onMove = (moveEvent: PointerEvent) => {
+        if (!resizeRef.current) return;
+        const dx = moveEvent.clientX - resizeRef.current.startX;
+        const daysDelta = Math.round(dx / pxPerDay);
+        const newDuration = Math.max(1, resizeRef.current.startDuration + daysDelta);
+
+        // Live preview: update the timeline item's end date directly
+        const newEndDate = format(addDays(parseISO(item.startDate), newDuration), 'yyyy-MM-dd');
+        useProjectStore.setState((state) => ({
+          timelineItems: state.timelineItems.map((i) =>
+            i.id === item.id ? { ...i, endDate: newEndDate } : i
+          ),
+        }));
+      };
+
+      const onUp = (upEvent: PointerEvent) => {
+        if (!resizeRef.current) return;
+        const dx = upEvent.clientX - resizeRef.current.startX;
+        const daysDelta = Math.round(dx / pxPerDay);
+        const newDuration = Math.max(1, resizeRef.current.startDuration + daysDelta);
+        resizeRef.current = null;
+
+        if (newDuration !== card.duration) {
+          updateCard(card.id, { duration: newDuration });
+        }
+
+        window.removeEventListener('pointermove', onMove);
+        window.removeEventListener('pointerup', onUp);
+      };
+
+      window.addEventListener('pointermove', onMove);
+      window.addEventListener('pointerup', onUp);
+    },
+    [card, item, viewMode, updateCard]
+  );
+
   if (!card) return null;
 
   const colWidth = COLUMN_WIDTHS[viewMode];
@@ -44,13 +102,16 @@ export default function TimelineItem({ item }: Props) {
 
   if (colEnd < 0 || colStart >= COLUMN_COUNT) return null;
 
+  const currentDuration = differenceInDays(parseISO(item.endDate), parseISO(item.startDate));
+
   return (
     <div
       ref={setNodeRef}
       {...listeners}
       {...attributes}
+      title={`${card.title} (${currentDuration}d)\n${item.startDate} — ${item.endDate}`}
       className={`
-        absolute rounded-md px-2 py-1 cursor-grab active:cursor-grabbing
+        group/item absolute rounded-md px-2 py-1 cursor-grab active:cursor-grabbing
         flex items-center gap-1 overflow-hidden select-none
         transition-shadow duration-150
         hover:shadow-md hover:brightness-105
@@ -68,8 +129,14 @@ export default function TimelineItem({ item }: Props) {
         {card.title}
       </span>
       <span className="text-[10px] text-white/70 shrink-0">
-        {card.duration}d
+        {currentDuration}d
       </span>
+      {/* Resize handle */}
+      <div
+        onPointerDown={handleResizeStart}
+        className="absolute right-0 top-0 bottom-0 w-2 cursor-ew-resize opacity-0 group-hover/item:opacity-100 transition-opacity"
+        style={{ backgroundColor: 'rgba(255,255,255,0.3)' }}
+      />
     </div>
   );
 }
