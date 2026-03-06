@@ -19,7 +19,7 @@ function DroppableCell({ dateStr, rowIndex, colWidth, today }: {
   colWidth: number;
   today: boolean;
 }) {
-  const { setNodeRef, isOver } = useDroppable({
+  const { setNodeRef } = useDroppable({
     id: `cell-${dateStr}-${rowIndex}`,
     data: {
       type: 'cell',
@@ -34,7 +34,6 @@ function DroppableCell({ dateStr, rowIndex, colWidth, today }: {
       className={`
         shrink-0 border-r border-b border-slate-100
         ${today ? 'bg-blue-50/30' : ''}
-        ${isOver ? 'bg-blue-100/50' : ''}
       `}
       style={{ width: colWidth, height: ROW_HEIGHT }}
     />

@@ -7,12 +7,20 @@ import {
   COLUMN_WIDTHS,
   getTodayColumnIndex,
 } from '../../lib/timelineUtils';
+import { addDays, format } from 'date-fns';
 
 export default function Timeline() {
   const scrollRef = useRef<HTMLDivElement>(null);
-  const panRef = useRef<{ active: boolean; startX: number; scrollStart: number } | null>(null);
+  const panRef = useRef<{
+    active: boolean;
+    startX: number;
+    startDateStr: string;
+    lastDaysDelta: number;
+  } | null>(null);
+  const skipScrollRef = useRef(false);
   const viewMode = useProjectStore((s) => s.viewMode);
   const timelineStartDate = useProjectStore((s) => s.timelineStartDate);
+  const setTimelineStartDate = useProjectStore((s) => s.setTimelineStartDate);
 
   const startDate = useMemo(
     () => new Date(timelineStartDate + 'T00:00:00'),
@@ -20,6 +28,10 @@ export default function Timeline() {
   );
 
   useEffect(() => {
+    if (skipScrollRef.current) {
+      skipScrollRef.current = false;
+      return;
+    }
     if (!scrollRef.current) return;
     const todayIndex = getTodayColumnIndex(startDate, viewMode);
     const colWidth = COLUMN_WIDTHS[viewMode];
@@ -28,33 +40,43 @@ export default function Timeline() {
   }, [timelineStartDate, viewMode, startDate]);
 
   const handlePointerDown = useCallback((e: React.PointerEvent) => {
-    // Only pan on left click on the background (not on draggable items)
     if (e.button !== 0) return;
     const target = e.target as HTMLElement;
     if (target.closest('[data-draggable]')) return;
-    if (!scrollRef.current) return;
 
     panRef.current = {
       active: true,
       startX: e.clientX,
-      scrollStart: scrollRef.current.scrollLeft,
+      startDateStr: timelineStartDate,
+      lastDaysDelta: 0,
     };
-    scrollRef.current.style.cursor = 'grabbing';
+    document.body.style.cursor = 'grabbing';
     e.preventDefault();
-  }, []);
+  }, [timelineStartDate]);
 
   const handlePointerMove = useCallback((e: React.PointerEvent) => {
-    if (!panRef.current?.active || !scrollRef.current) return;
+    if (!panRef.current?.active) return;
     const dx = e.clientX - panRef.current.startX;
-    scrollRef.current.scrollLeft = panRef.current.scrollStart - dx;
-  }, []);
+
+    const colWidth = COLUMN_WIDTHS[viewMode];
+    const pxPerDay = viewMode === 'day' ? colWidth
+      : viewMode === 'week' ? colWidth / 7
+      : colWidth / 30;
+    const daysDelta = Math.round(-dx / pxPerDay);
+
+    if (daysDelta === panRef.current.lastDaysDelta) return;
+    panRef.current.lastDaysDelta = daysDelta;
+
+    const baseDate = new Date(panRef.current.startDateStr + 'T00:00:00');
+    const newDate = addDays(baseDate, daysDelta);
+    skipScrollRef.current = true;
+    setTimelineStartDate(format(newDate, 'yyyy-MM-dd'));
+  }, [viewMode, setTimelineStartDate]);
 
   const handlePointerUp = useCallback(() => {
     if (!panRef.current) return;
     panRef.current = null;
-    if (scrollRef.current) {
-      scrollRef.current.style.cursor = '';
-    }
+    document.body.style.cursor = '';
   }, []);
 
   return (
