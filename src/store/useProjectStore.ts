@@ -30,7 +30,7 @@ interface ProjectStore {
 
 const getDefaultStartDate = () => {
   const today = new Date();
-  const start = addDays(today, -60);
+  const start = addDays(today, -120);
   return format(start, 'yyyy-MM-dd');
 };
 
