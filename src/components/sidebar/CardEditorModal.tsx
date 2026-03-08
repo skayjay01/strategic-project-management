@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
-import type { ProjectCard } from '../../types';
+import type { ProjectCard, Assignee } from '../../types';
 import { X } from 'lucide-react';
+
+const ASSIGNEE_OPTIONS: Assignee[] = ['Jack', 'Yishan'];
 
 const PRESET_COLORS = [
   '#3b82f6', '#8b5cf6', '#10b981', '#ef4444',
@@ -19,6 +21,7 @@ export default function CardEditorModal({ card, defaultColorIndex = 0, onSave, o
   const [duration, setDuration] = useState(30);
   const [color, setColor] = useState(PRESET_COLORS[defaultColorIndex % PRESET_COLORS.length]);
   const [description, setDescription] = useState('');
+  const [assignees, setAssignees] = useState<Assignee[]>([]);
 
   useEffect(() => {
     if (card) {
@@ -26,13 +29,14 @@ export default function CardEditorModal({ card, defaultColorIndex = 0, onSave, o
       setDuration(card.duration);
       setColor(card.color);
       setDescription(card.description);
+      setAssignees(card.assignees ?? []);
     }
   }, [card]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!title.trim()) return;
-    onSave({ title: title.trim(), duration, color, description: description.trim() });
+    onSave({ title: title.trim(), duration, color, description: description.trim(), assignees });
     onClose();
   };
 
@@ -100,6 +104,33 @@ export default function CardEditorModal({ card, defaultColorIndex = 0, onSave, o
               className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
               placeholder="Brief description..."
             />
+          </div>
+
+          <div>
+            <label className="block text-xs font-medium text-slate-600 mb-1">Assigned To</label>
+            <div className="flex gap-2">
+              {ASSIGNEE_OPTIONS.map((name) => {
+                const selected = assignees.includes(name);
+                return (
+                  <button
+                    key={name}
+                    type="button"
+                    onClick={() =>
+                      setAssignees((prev) =>
+                        selected ? prev.filter((a) => a !== name) : [...prev, name]
+                      )
+                    }
+                    className={`px-3 py-1.5 text-xs font-medium rounded-lg border transition-all ${
+                      selected
+                        ? 'bg-blue-600 text-white border-blue-600'
+                        : 'bg-white text-slate-600 border-slate-200 hover:border-slate-300'
+                    }`}
+                  >
+                    {name}
+                  </button>
+                );
+              })}
+            </div>
           </div>
 
           <div className="flex gap-2 pt-2">

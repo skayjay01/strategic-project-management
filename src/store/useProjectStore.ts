@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import type { ProjectCard, TimelineItem, ViewMode } from '../types';
+import type { ProjectCard, TimelineItem, ViewMode, Assignee } from '../types';
 import { computeEndDate } from '../lib/timelineUtils';
 import { supabase } from '../lib/supabase';
 import { format, addDays } from 'date-fns';
@@ -11,7 +11,9 @@ interface ProjectStore {
   timelineStartDate: string;
   loaded: boolean;
   editingCardId: string | null;
+  assigneeFilter: Assignee | null;
 
+  setAssigneeFilter: (filter: Assignee | null) => void;
   setEditingCardId: (id: string | null) => void;
   loadFromSupabase: () => Promise<void>;
   setViewMode: (mode: ViewMode) => void;
@@ -41,7 +43,9 @@ export const useProjectStore = create<ProjectStore>()((set, get) => ({
   timelineStartDate: getDefaultStartDate(),
   loaded: false,
   editingCardId: null,
+  assigneeFilter: null,
 
+  setAssigneeFilter: (filter) => set({ assigneeFilter: filter }),
   setEditingCardId: (id) => set({ editingCardId: id }),
 
   loadFromSupabase: async () => {
@@ -56,6 +60,7 @@ export const useProjectStore = create<ProjectStore>()((set, get) => ({
         duration: r.duration,
         color: r.color,
         description: r.description,
+        assignees: r.assignees ?? [],
       })),
       timelineItems: (itemsRes.data ?? []).map((r) => ({
         id: r.id,
@@ -155,6 +160,7 @@ export const useProjectStore = create<ProjectStore>()((set, get) => ({
       duration: card.duration,
       color: card.color,
       description: card.description,
+      assignees: card.assignees,
     });
   },
 
@@ -183,6 +189,7 @@ export const useProjectStore = create<ProjectStore>()((set, get) => ({
     if (updates.duration !== undefined) dbUpdates.duration = updates.duration;
     if (updates.color !== undefined) dbUpdates.color = updates.color;
     if (updates.description !== undefined) dbUpdates.description = updates.description;
+    if (updates.assignees !== undefined) dbUpdates.assignees = updates.assignees;
     if (Object.keys(dbUpdates).length > 0) {
       await supabase.from('project_cards').update(dbUpdates).eq('id', id);
     }

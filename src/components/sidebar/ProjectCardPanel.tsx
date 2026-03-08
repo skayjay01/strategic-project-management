@@ -7,7 +7,11 @@ import CardEditorModal from './CardEditorModal';
 import { LayoutGrid, Plus } from 'lucide-react';
 
 export default function ProjectCardPanel() {
-  const cards = useProjectStore((s) => s.cards);
+  const allCards = useProjectStore((s) => s.cards);
+  const assigneeFilter = useProjectStore((s) => s.assigneeFilter);
+  const cards = assigneeFilter
+    ? allCards.filter((c) => c.assignees?.includes(assigneeFilter))
+    : allCards;
   const addCard = useProjectStore((s) => s.addCard);
   const updateCard = useProjectStore((s) => s.updateCard);
   const editingCardId = useProjectStore((s) => s.editingCardId);

@@ -1,6 +1,8 @@
 import { useProjectStore } from '../../store/useProjectStore';
-import type { ViewMode } from '../../types';
-import { ChevronLeft, ChevronRight, Calendar } from 'lucide-react';
+import type { ViewMode, Assignee } from '../../types';
+import { ChevronLeft, ChevronRight, Calendar, User } from 'lucide-react';
+
+const ASSIGNEE_OPTIONS: Assignee[] = ['Jack', 'Yishan'];
 
 const viewModes: { value: ViewMode; label: string }[] = [
   { value: 'day', label: 'Day' },
@@ -13,6 +15,8 @@ export default function TimelineControls() {
   const setViewMode = useProjectStore((s) => s.setViewMode);
   const navigateTimeline = useProjectStore((s) => s.navigateTimeline);
   const goToToday = useProjectStore((s) => s.goToToday);
+  const assigneeFilter = useProjectStore((s) => s.assigneeFilter);
+  const setAssigneeFilter = useProjectStore((s) => s.setAssigneeFilter);
 
   return (
     <div className="flex items-center gap-3 p-3 border-b border-slate-200 bg-white">
@@ -55,6 +59,35 @@ export default function TimelineControls() {
         <Calendar className="w-3.5 h-3.5" />
         Today
       </button>
+
+      <div className="ml-auto flex items-center gap-1.5">
+        <User className="w-3.5 h-3.5 text-slate-400" />
+        <div className="flex items-center bg-slate-100 rounded-lg p-0.5">
+          <button
+            onClick={() => setAssigneeFilter(null)}
+            className={`px-2.5 py-1 text-xs font-medium rounded-md transition-all ${
+              assigneeFilter === null
+                ? 'bg-white text-slate-800 shadow-sm'
+                : 'text-slate-500 hover:text-slate-700'
+            }`}
+          >
+            All
+          </button>
+          {ASSIGNEE_OPTIONS.map((name) => (
+            <button
+              key={name}
+              onClick={() => setAssigneeFilter(assigneeFilter === name ? null : name)}
+              className={`px-2.5 py-1 text-xs font-medium rounded-md transition-all ${
+                assigneeFilter === name
+                  ? 'bg-white text-slate-800 shadow-sm'
+                  : 'text-slate-500 hover:text-slate-700'
+              }`}
+            >
+              {name}
+            </button>
+          ))}
+        </div>
+      </div>
     </div>
   );
 }

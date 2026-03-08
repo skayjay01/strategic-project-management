@@ -133,6 +133,11 @@ export default function TimelineItem({ item, isOverlapping }: Props) {
       <span className="text-xs font-semibold text-white truncate">
         {card.title}
       </span>
+      {card.assignees?.length > 0 && (
+        <span className="text-[10px] text-white/80 shrink-0">
+          {card.assignees.map((n) => n[0]).join('')}
+        </span>
+      )}
       <span className="text-[10px] text-white/70 shrink-0">
         {currentDuration}d
       </span>

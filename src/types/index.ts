@@ -1,9 +1,12 @@
+export type Assignee = 'Jack' | 'Yishan';
+
 export interface ProjectCard {
   id: string;
   title: string;
   duration: number; // days
   color: string; // hex
   description: string;
+  assignees: Assignee[];
 }
 
 export interface TimelineItem {

@@ -65,6 +65,18 @@ export default function ProjectCard({ card, onEdit }: Props) {
             </span>
           </div>
         </div>
+        {card.assignees?.length > 0 && (
+          <div className="flex gap-1 mt-1.5">
+            {card.assignees.map((name) => (
+              <span
+                key={name}
+                className="text-[10px] font-medium px-1.5 py-0.5 rounded-full bg-slate-100 text-slate-600"
+              >
+                {name}
+              </span>
+            ))}
+          </div>
+        )}
         <p className="text-xs text-slate-500 mt-1 line-clamp-2">
           {card.description}
         </p>

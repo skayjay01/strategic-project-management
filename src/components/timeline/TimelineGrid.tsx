@@ -13,7 +13,16 @@ import {
 import { format } from 'date-fns';
 
 export default function TimelineGrid() {
-  const timelineItems = useProjectStore((s) => s.timelineItems);
+  const allTimelineItems = useProjectStore((s) => s.timelineItems);
+  const cards = useProjectStore((s) => s.cards);
+  const assigneeFilter = useProjectStore((s) => s.assigneeFilter);
+  const timelineItems = useMemo(() => {
+    if (!assigneeFilter) return allTimelineItems;
+    return allTimelineItems.filter((item) => {
+      const card = cards.find((c) => c.id === item.projectId);
+      return card?.assignees?.includes(assigneeFilter);
+    });
+  }, [allTimelineItems, cards, assigneeFilter]);
   const viewMode = useProjectStore((s) => s.viewMode);
   const timelineStartDate = useProjectStore((s) => s.timelineStartDate);
   const { active, activatorEvent } = useDndContext();
