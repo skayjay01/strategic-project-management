@@ -6,6 +6,7 @@ export const sampleProjects: ProjectCard[] = [
     title: 'Website Redesign',
     duration: 30,
     color: '#3b82f6',
+    assignees: [],
     description: 'Complete overhaul of the company website with modern design and improved UX',
   },
   {
@@ -13,6 +14,7 @@ export const sampleProjects: ProjectCard[] = [
     title: 'API Migration',
     duration: 45,
     color: '#8b5cf6',
+    assignees: [],
     description: 'Migrate legacy REST APIs to GraphQL with improved documentation',
   },
   {
@@ -20,6 +22,7 @@ export const sampleProjects: ProjectCard[] = [
     title: 'Mobile App Launch',
     duration: 60,
     color: '#10b981',
+    assignees: [],
     description: 'Build and launch the cross-platform mobile application for iOS and Android',
   },
   {
@@ -27,6 +30,7 @@ export const sampleProjects: ProjectCard[] = [
     title: 'Security Audit',
     duration: 14,
     color: '#ef4444',
+    assignees: [],
     description: 'Comprehensive security review and penetration testing of all systems',
   },
   {
@@ -34,6 +38,7 @@ export const sampleProjects: ProjectCard[] = [
     title: 'Data Pipeline',
     duration: 21,
     color: '#f59e0b',
+    assignees: [],
     description: 'Build real-time data pipeline for analytics and reporting dashboard',
   },
   {
@@ -41,6 +46,7 @@ export const sampleProjects: ProjectCard[] = [
     title: 'Design System',
     duration: 35,
     color: '#ec4899',
+    assignees: [],
     description: 'Create unified component library and design tokens for all products',
   },
   {
@@ -48,6 +54,7 @@ export const sampleProjects: ProjectCard[] = [
     title: 'Cloud Migration',
     duration: 90,
     color: '#06b6d4',
+    assignees: [],
     description: 'Migrate on-premise infrastructure to cloud with zero-downtime strategy',
   },
   {
@@ -55,6 +62,7 @@ export const sampleProjects: ProjectCard[] = [
     title: 'Team Onboarding',
     duration: 10,
     color: '#84cc16',
+    assignees: [],
     description: 'Structured onboarding program for new engineering team members',
   },
 ];

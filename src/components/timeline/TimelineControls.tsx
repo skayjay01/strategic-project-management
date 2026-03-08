@@ -5,7 +5,6 @@ import { ChevronLeft, ChevronRight, Calendar, User } from 'lucide-react';
 const ASSIGNEE_OPTIONS: Assignee[] = ['Jack', 'Yishan'];
 
 const viewModes: { value: ViewMode; label: string }[] = [
-  { value: 'day', label: 'Day' },
   { value: 'week', label: 'Week' },
   { value: 'month', label: 'Month' },
 ];

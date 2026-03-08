@@ -17,4 +17,4 @@ export interface TimelineItem {
   row: number; // swim-lane index
 }
 
-export type ViewMode = 'day' | 'week' | 'month';
+export type ViewMode = 'week' | 'month';

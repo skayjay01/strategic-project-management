@@ -52,9 +52,7 @@ export default function TimelineItem({ item, isOverlapping }: Props) {
 
       const colWidth = COLUMN_WIDTHS[viewMode];
       // px per day depends on view mode
-      const pxPerDay = viewMode === 'day' ? colWidth
-        : viewMode === 'week' ? colWidth / 7
-        : colWidth / 30;
+      const pxPerDay = viewMode === 'week' ? colWidth / 7 : colWidth / 30;
 
       const onMove = (moveEvent: PointerEvent) => {
         if (!resizeRef.current) return;

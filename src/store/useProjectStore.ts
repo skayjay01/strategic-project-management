@@ -83,9 +83,6 @@ export const useProjectStore = create<ProjectStore>()((set, get) => ({
     const shift = direction === 'right' ? 1 : -1;
     let newDate: Date;
     switch (viewMode) {
-      case 'day':
-        newDate = addDays(current, shift * 7);
-        break;
       case 'week':
         newDate = addDays(current, shift * 28);
         break;

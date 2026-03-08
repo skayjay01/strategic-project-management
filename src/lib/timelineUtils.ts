@@ -13,7 +13,6 @@ import {
 import type { ViewMode } from '../types';
 
 export const COLUMN_WIDTHS: Record<ViewMode, number> = {
-  day: 40,
   week: 100,
   month: 150,
 };
@@ -25,9 +24,6 @@ export function generateColumns(startDate: Date, viewMode: ViewMode): Date[] {
   const columns: Date[] = [];
   for (let i = 0; i < COLUMN_COUNT; i++) {
     switch (viewMode) {
-      case 'day':
-        columns.push(addDays(startDate, i));
-        break;
       case 'week':
         columns.push(addWeeks(startOfWeek(startDate, { weekStartsOn: 1 }), i));
         break;
@@ -41,8 +37,6 @@ export function generateColumns(startDate: Date, viewMode: ViewMode): Date[] {
 
 export function formatColumnHeader(date: Date, viewMode: ViewMode): string {
   switch (viewMode) {
-    case 'day':
-      return format(date, 'd');
     case 'week':
       return format(date, 'MMM d');
     case 'month':
@@ -52,8 +46,6 @@ export function formatColumnHeader(date: Date, viewMode: ViewMode): string {
 
 export function formatColumnSubHeader(date: Date, viewMode: ViewMode): string {
   switch (viewMode) {
-    case 'day':
-      return format(date, 'EEE');
     case 'week':
       return 'W' + format(date, 'w');
     case 'month':
@@ -68,8 +60,6 @@ export function getColumnIndex(
 ): number {
   const parsed = parseISO(date);
   switch (viewMode) {
-    case 'day':
-      return differenceInDays(parsed, startDate);
     case 'week': {
       const weekStart = startOfWeek(startDate, { weekStartsOn: 1 });
       return differenceInDays(parsed, weekStart) / 7;
@@ -91,10 +81,6 @@ export function dateFromGridPixel(
   viewMode: ViewMode
 ): string {
   const colWidth = COLUMN_WIDTHS[viewMode];
-  if (viewMode === 'day') {
-    const colIndex = Math.max(0, Math.floor(xInGrid / colWidth));
-    return format(addDays(startDate, colIndex), 'yyyy-MM-dd');
-  }
   if (viewMode === 'week') {
     const weekStart = startOfWeek(startDate, { weekStartsOn: 1 });
     const dayIndex = Math.max(0, Math.floor(xInGrid / (colWidth / 7)));
@@ -117,9 +103,6 @@ export function dateFromColumnIndex(
 ): string {
   let date: Date;
   switch (viewMode) {
-    case 'day':
-      date = addDays(startDate, index);
-      break;
     case 'week':
       date = addWeeks(startOfWeek(startDate, { weekStartsOn: 1 }), index);
       break;

@@ -59,9 +59,7 @@ export default function Timeline() {
     const dx = e.clientX - panRef.current.startX;
 
     const colWidth = COLUMN_WIDTHS[viewMode];
-    const pxPerDay = viewMode === 'day' ? colWidth
-      : viewMode === 'week' ? colWidth / 7
-      : colWidth / 30;
+    const pxPerDay = viewMode === 'week' ? colWidth / 7 : colWidth / 30;
     const daysDelta = Math.round(-dx / pxPerDay);
 
     if (daysDelta === panRef.current.lastDaysDelta) return;

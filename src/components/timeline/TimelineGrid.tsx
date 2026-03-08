@@ -99,9 +99,7 @@ export default function TimelineGrid() {
       const row = Math.max(0, Math.floor(yInGrid / ROW_HEIGHT));
       const date = dateFromGridPixel(xInGrid, startDate, viewMode);
 
-      const pxPerDay = viewMode === 'day' ? colWidth
-        : viewMode === 'week' ? colWidth / 7
-        : colWidth / 30;
+      const pxPerDay = viewMode === 'week' ? colWidth / 7 : colWidth / 30;
       const snappedX = Math.round(xInGrid / pxPerDay) * pxPerDay;
 
       setIndicator({ x: snappedX, row, date });
@@ -146,7 +144,7 @@ export default function TimelineGrid() {
       {showTodayLine && (
         <div
           className="absolute top-0 bottom-0 w-0.5 bg-blue-500 z-20 pointer-events-none"
-          style={{ left: viewMode === 'day' ? todayIndex * colWidth + colWidth / 2 : todayIndex * colWidth }}
+          style={{ left: todayIndex * colWidth }}
         />
       )}
 
