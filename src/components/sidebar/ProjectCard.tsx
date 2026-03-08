@@ -1,7 +1,10 @@
 import { useDraggable } from '@dnd-kit/core';
 import type { ProjectCard as ProjectCardType } from '../../types';
 import { useProjectStore } from '../../store/useProjectStore';
-import { Pencil, Trash2 } from 'lucide-react';
+import { Pencil, Trash2, Zap, Flame } from 'lucide-react';
+import type { Assignee } from '../../types';
+
+const ASSIGNEE_ICON: Record<Assignee, typeof Zap> = { Yishan: Zap, Jack: Flame };
 
 interface Props {
   card: ProjectCardType;
@@ -66,15 +69,16 @@ export default function ProjectCard({ card, onEdit }: Props) {
           </div>
         </div>
         {card.assignees?.length > 0 && (
-          <div className="flex gap-1 mt-1.5">
-            {card.assignees.map((name) => (
-              <span
-                key={name}
-                className="text-[10px] font-medium px-1.5 py-0.5 rounded-full bg-slate-100 text-slate-600"
-              >
-                {name}
-              </span>
-            ))}
+          <div className="flex items-center gap-1 mt-1.5">
+            {card.assignees.map((name) => {
+              const Icon = ASSIGNEE_ICON[name];
+              return (
+                <span key={name} className="flex items-center gap-0.5 text-[10px] font-medium text-slate-500">
+                  <Icon className="w-3 h-3" />
+                  {name}
+                </span>
+              );
+            })}
           </div>
         )}
         <p className="text-xs text-slate-500 mt-1 line-clamp-2">

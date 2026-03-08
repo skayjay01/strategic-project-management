@@ -1,6 +1,8 @@
 import { useProjectStore } from '../../store/useProjectStore';
 import type { ViewMode, Assignee } from '../../types';
-import { ChevronLeft, ChevronRight, Calendar, User } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Calendar, User, Zap, Flame } from 'lucide-react';
+
+const ASSIGNEE_ICON: Record<Assignee, typeof Zap> = { Yishan: Zap, Jack: Flame };
 
 const ASSIGNEE_OPTIONS: Assignee[] = ['Jack', 'Yishan'];
 
@@ -72,19 +74,23 @@ export default function TimelineControls() {
           >
             All
           </button>
-          {ASSIGNEE_OPTIONS.map((name) => (
-            <button
-              key={name}
-              onClick={() => setAssigneeFilter(assigneeFilter === name ? null : name)}
-              className={`px-2.5 py-1 text-xs font-medium rounded-md transition-all ${
-                assigneeFilter === name
-                  ? 'bg-white text-slate-800 shadow-sm'
-                  : 'text-slate-500 hover:text-slate-700'
-              }`}
-            >
-              {name}
-            </button>
-          ))}
+          {ASSIGNEE_OPTIONS.map((name) => {
+            const Icon = ASSIGNEE_ICON[name];
+            return (
+              <button
+                key={name}
+                onClick={() => setAssigneeFilter(assigneeFilter === name ? null : name)}
+                className={`flex items-center gap-1 px-2.5 py-1 text-xs font-medium rounded-md transition-all ${
+                  assigneeFilter === name
+                    ? 'bg-white text-slate-800 shadow-sm'
+                    : 'text-slate-500 hover:text-slate-700'
+                }`}
+              >
+                <Icon className="w-3 h-3" />
+                {name}
+              </button>
+            );
+          })}
         </div>
       </div>
     </div>

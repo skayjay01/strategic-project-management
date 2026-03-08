@@ -10,6 +10,10 @@ import {
 } from '../../lib/timelineUtils';
 import { useMemo } from 'react';
 import { differenceInDays, parseISO, format, addDays } from 'date-fns';
+import { Zap, Flame } from 'lucide-react';
+import type { Assignee } from '../../types';
+
+const ASSIGNEE_ICON: Record<Assignee, typeof Zap> = { Yishan: Zap, Jack: Flame };
 
 interface Props {
   item: TimelineItemType;
@@ -132,9 +136,12 @@ export default function TimelineItem({ item, isOverlapping }: Props) {
         {card.title}
       </span>
       {card.assignees?.length > 0 && (
-        <span className="text-[10px] text-white/80 shrink-0">
-          {card.assignees.map((n) => n[0]).join('')}
-        </span>
+        <div className="flex items-center shrink-0">
+          {card.assignees.map((name) => {
+            const Icon = ASSIGNEE_ICON[name];
+            return <Icon key={name} className="w-3.5 h-3.5 text-white drop-shadow-sm" />;
+          })}
+        </div>
       )}
       <span className="text-[10px] text-white/70 shrink-0">
         {currentDuration}d

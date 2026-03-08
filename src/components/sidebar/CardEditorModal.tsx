@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
 import type { ProjectCard, Assignee } from '../../types';
-import { X } from 'lucide-react';
+import { X, Zap, Flame } from 'lucide-react';
 
 const ASSIGNEE_OPTIONS: Assignee[] = ['Jack', 'Yishan'];
+const ASSIGNEE_ICON: Record<Assignee, typeof Zap> = { Yishan: Zap, Jack: Flame };
 
 const PRESET_COLORS = [
   '#3b82f6', '#8b5cf6', '#10b981', '#ef4444',
@@ -111,6 +112,7 @@ export default function CardEditorModal({ card, defaultColorIndex = 0, onSave, o
             <div className="flex gap-2">
               {ASSIGNEE_OPTIONS.map((name) => {
                 const selected = assignees.includes(name);
+                const Icon = ASSIGNEE_ICON[name];
                 return (
                   <button
                     key={name}
@@ -120,12 +122,13 @@ export default function CardEditorModal({ card, defaultColorIndex = 0, onSave, o
                         selected ? prev.filter((a) => a !== name) : [...prev, name]
                       )
                     }
-                    className={`px-3 py-1.5 text-xs font-medium rounded-lg border transition-all ${
+                    className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg border transition-all ${
                       selected
                         ? 'bg-blue-600 text-white border-blue-600'
                         : 'bg-white text-slate-600 border-slate-200 hover:border-slate-300'
                     }`}
                   >
+                    <Icon className="w-3.5 h-3.5" />
                     {name}
                   </button>
                 );
