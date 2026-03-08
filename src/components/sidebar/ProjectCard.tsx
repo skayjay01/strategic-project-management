@@ -4,7 +4,10 @@ import { useProjectStore } from '../../store/useProjectStore';
 import { Pencil, Trash2, Zap, Flame } from 'lucide-react';
 import type { Assignee } from '../../types';
 
-const ASSIGNEE_ICON: Record<Assignee, typeof Zap> = { Yishan: Zap, Jack: Flame };
+const ASSIGNEE_CONFIG: Record<Assignee, { icon: typeof Zap; fill: string; stroke: string }> = {
+  Yishan: { icon: Zap, fill: '#1a1a1a', stroke: '#1a1a1a' },
+  Jack: { icon: Flame, fill: '#f97316', stroke: '#f97316' },
+};
 
 interface Props {
   card: ProjectCardType;
@@ -71,10 +74,10 @@ export default function ProjectCard({ card, onEdit }: Props) {
         {card.assignees?.length > 0 && (
           <div className="flex items-center gap-1 mt-1.5">
             {card.assignees.map((name) => {
-              const Icon = ASSIGNEE_ICON[name];
+              const { icon: Icon, fill, stroke } = ASSIGNEE_CONFIG[name];
               return (
                 <span key={name} className="flex items-center gap-0.5 text-[10px] font-medium text-slate-500">
-                  <Icon className="w-3 h-3" />
+                  <Icon className="w-3 h-3" fill={fill} stroke={stroke} />
                   {name}
                 </span>
               );

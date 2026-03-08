@@ -13,7 +13,10 @@ import { differenceInDays, parseISO, format, addDays } from 'date-fns';
 import { Zap, Flame } from 'lucide-react';
 import type { Assignee } from '../../types';
 
-const ASSIGNEE_ICON: Record<Assignee, typeof Zap> = { Yishan: Zap, Jack: Flame };
+const ASSIGNEE_CONFIG: Record<Assignee, { icon: typeof Zap; fill: string; stroke: string }> = {
+  Yishan: { icon: Zap, fill: '#1a1a1a', stroke: '#1a1a1a' },
+  Jack: { icon: Flame, fill: '#f97316', stroke: '#f97316' },
+};
 
 interface Props {
   item: TimelineItemType;
@@ -138,8 +141,8 @@ export default function TimelineItem({ item, isOverlapping }: Props) {
       {card.assignees?.length > 0 && (
         <div className="flex items-center shrink-0">
           {card.assignees.map((name) => {
-            const Icon = ASSIGNEE_ICON[name];
-            return <Icon key={name} className="w-3.5 h-3.5 text-white drop-shadow-sm" />;
+            const { icon: Icon, fill, stroke } = ASSIGNEE_CONFIG[name];
+            return <Icon key={name} className="w-3.5 h-3.5 drop-shadow-sm" fill={fill} stroke={stroke} />;
           })}
         </div>
       )}
