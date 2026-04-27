@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
-import type { ProjectCard, Assignee } from '../../types';
+import type { ProjectCard, Assignee, TimelineItem } from '../../types';
 import { X, Zap, Flame } from 'lucide-react';
+import { format, parseISO } from 'date-fns';
 
 const ASSIGNEE_OPTIONS: Assignee[] = ['Jack', 'Yishan'];
 const ASSIGNEE_CONFIG: Record<Assignee, { icon: typeof Zap; fill: string; stroke: string }> = {
@@ -15,12 +16,13 @@ const PRESET_COLORS = [
 
 interface Props {
   card: ProjectCard | null; // null = creating new
+  timelineItem?: TimelineItem | null;
   defaultColorIndex?: number;
   onSave: (data: Omit<ProjectCard, 'id'>) => void;
   onClose: () => void;
 }
 
-export default function CardEditorModal({ card, defaultColorIndex = 0, onSave, onClose }: Props) {
+export default function CardEditorModal({ card, timelineItem, defaultColorIndex = 0, onSave, onClose }: Props) {
   const [title, setTitle] = useState('');
   const [duration, setDuration] = useState(30);
   const [color, setColor] = useState(PRESET_COLORS[defaultColorIndex % PRESET_COLORS.length]);
@@ -81,6 +83,23 @@ export default function CardEditorModal({ card, defaultColorIndex = 0, onSave, o
               className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             />
           </div>
+
+          {timelineItem && (
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="block text-xs font-medium text-slate-600 mb-1">Start Date</label>
+                <div className="px-3 py-2 text-sm text-slate-800 bg-slate-50 border border-slate-200 rounded-lg">
+                  {format(parseISO(timelineItem.startDate), 'MMM d, yyyy')}
+                </div>
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-slate-600 mb-1">End Date</label>
+                <div className="px-3 py-2 text-sm text-slate-800 bg-slate-50 border border-slate-200 rounded-lg">
+                  {format(parseISO(timelineItem.endDate), 'MMM d, yyyy')}
+                </div>
+              </div>
+            </div>
+          )}
 
           <div>
             <label className="block text-xs font-medium text-slate-600 mb-1">Color</label>

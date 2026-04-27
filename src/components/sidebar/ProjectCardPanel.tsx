@@ -12,12 +12,17 @@ export default function ProjectCardPanel() {
   const cards = assigneeFilter
     ? allCards.filter((c) => c.assignees?.includes(assigneeFilter))
     : allCards;
+  const timelineItems = useProjectStore((s) => s.timelineItems);
   const addCard = useProjectStore((s) => s.addCard);
   const updateCard = useProjectStore((s) => s.updateCard);
   const editingCardId = useProjectStore((s) => s.editingCardId);
   const setEditingCardId = useProjectStore((s) => s.setEditingCardId);
   const [editingCard, setEditingCard] = useState<ProjectCardType | null>(null);
   const [showModal, setShowModal] = useState(false);
+
+  const editingTimelineItem = editingCard
+    ? timelineItems.find((i) => i.projectId === editingCard.id) ?? null
+    : null;
 
   useEffect(() => {
     if (editingCardId) {
@@ -92,6 +97,7 @@ export default function ProjectCardPanel() {
       {showModal && (
         <CardEditorModal
           card={editingCard}
+          timelineItem={editingTimelineItem}
           defaultColorIndex={cards.length}
           onSave={handleSave}
           onClose={() => setShowModal(false)}
