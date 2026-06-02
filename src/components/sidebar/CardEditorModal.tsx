@@ -46,55 +46,60 @@ export default function CardEditorModal({ card, timelineItem, defaultColorIndex 
     onClose();
   };
 
+  const inputClass =
+    'w-full px-3 py-2 text-sm bg-[var(--paper-sunk)] border border-[var(--line-strong)] rounded-lg text-[var(--ink)] placeholder:text-[var(--ink-faint)] focus:outline-none focus:ring-2 focus:ring-[var(--clay)] focus:border-transparent transition-shadow';
+  const labelClass = 'block eyebrow text-[var(--ink-soft)] mb-1.5';
+
   return (
-    <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center">
-      <div className="bg-white rounded-xl shadow-2xl w-96 max-w-[90vw]">
-        <div className="flex items-center justify-between p-4 border-b border-slate-200">
-          <h3 className="text-sm font-bold text-slate-800">
-            {card ? 'Edit Project' : 'New Project'}
-          </h3>
-          <button onClick={onClose} className="p-1 rounded hover:bg-slate-100 text-slate-400">
+    <div className="fixed inset-0 bg-[var(--ink)]/45 backdrop-blur-[2px] z-50 flex items-center justify-center p-4">
+      <div className="bg-[var(--paper-raised)] rounded-2xl shadow-2xl w-96 max-w-[90vw] ring-1 ring-[var(--line-strong)] reveal-up overflow-hidden">
+        <div className="flex items-center justify-between px-5 pt-4 pb-3 border-b border-[var(--line)]">
+          <div>
+            <div className="eyebrow text-[var(--clay)]">{card ? 'Edit' : 'New'}</div>
+            <h3 className="font-display text-xl font-semibold text-[var(--ink)] leading-tight mt-0.5">
+              {card ? 'Edit Project' : 'New Project'}
+            </h3>
+          </div>
+          <button onClick={onClose} aria-label="Close" className="p-1.5 rounded-lg hover:bg-[var(--paper-sunk)] text-[var(--ink-faint)] hover:text-[var(--ink)] transition-colors">
             <X className="w-4 h-4" />
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="p-4 space-y-4">
+        <form onSubmit={handleSubmit} className="p-5 space-y-4">
           <div>
-            <label className="block text-xs font-medium text-slate-600 mb-1">Title</label>
+            <label className={labelClass}>Title</label>
             <input
               type="text"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className={inputClass}
               placeholder="Project name"
               autoFocus
             />
           </div>
 
           <div>
-            <label className="block text-xs font-medium text-slate-600 mb-1">
-              Duration (days)
-            </label>
+            <label className={labelClass}>Duration (days)</label>
             <input
               type="number"
               value={duration}
               onChange={(e) => setDuration(Math.max(1, parseInt(e.target.value) || 1))}
               min={1}
-              className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className={`${inputClass} font-mono-num`}
             />
           </div>
 
           {timelineItem && (
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block text-xs font-medium text-slate-600 mb-1">Start Date</label>
-                <div className="px-3 py-2 text-sm text-slate-800 bg-slate-50 border border-slate-200 rounded-lg">
+                <label className={labelClass}>Start Date</label>
+                <div className="px-3 py-2 text-sm font-mono-num text-[var(--ink-2)] bg-[var(--paper-sunk)] border border-[var(--line)] rounded-lg">
                   {format(parseISO(timelineItem.startDate), 'MMM d, yyyy')}
                 </div>
               </div>
               <div>
-                <label className="block text-xs font-medium text-slate-600 mb-1">End Date</label>
-                <div className="px-3 py-2 text-sm text-slate-800 bg-slate-50 border border-slate-200 rounded-lg">
+                <label className={labelClass}>End Date</label>
+                <div className="px-3 py-2 text-sm font-mono-num text-[var(--ink-2)] bg-[var(--paper-sunk)] border border-[var(--line)] rounded-lg">
                   {format(parseISO(timelineItem.endDate), 'MMM d, yyyy')}
                 </div>
               </div>
@@ -102,15 +107,18 @@ export default function CardEditorModal({ card, timelineItem, defaultColorIndex 
           )}
 
           <div>
-            <label className="block text-xs font-medium text-slate-600 mb-1">Color</label>
+            <label className={labelClass}>Color</label>
             <div className="flex gap-2">
               {PRESET_COLORS.map((c) => (
                 <button
                   key={c}
                   type="button"
                   onClick={() => setColor(c)}
-                  className={`w-7 h-7 rounded-full transition-all ${
-                    color === c ? 'ring-2 ring-offset-2 ring-slate-400 scale-110' : 'hover:scale-105'
+                  aria-label={`Color ${c}`}
+                  className={`w-7 h-7 rounded-lg transition-all duration-150 ${
+                    color === c
+                      ? 'ring-2 ring-offset-2 ring-offset-[var(--paper-raised)] ring-[var(--ink)] scale-110'
+                      : 'hover:scale-105 ring-1 ring-black/10'
                   }`}
                   style={{ backgroundColor: c }}
                 />
@@ -119,18 +127,18 @@ export default function CardEditorModal({ card, timelineItem, defaultColorIndex 
           </div>
 
           <div>
-            <label className="block text-xs font-medium text-slate-600 mb-1">Description</label>
+            <label className={labelClass}>Description</label>
             <textarea
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               rows={2}
-              className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
-              placeholder="Brief description..."
+              className={`${inputClass} resize-none`}
+              placeholder="Brief description…"
             />
           </div>
 
           <div>
-            <label className="block text-xs font-medium text-slate-600 mb-1">Assigned To</label>
+            <label className={labelClass}>Assigned To</label>
             <div className="flex gap-2">
               {ASSIGNEE_OPTIONS.map((name) => {
                 const selected = assignees.includes(name);
@@ -144,13 +152,13 @@ export default function CardEditorModal({ card, timelineItem, defaultColorIndex 
                         selected ? prev.filter((a) => a !== name) : [...prev, name]
                       )
                     }
-                    className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg border transition-all ${
+                    className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg border transition-all duration-150 ${
                       selected
-                        ? 'bg-blue-600 text-white border-blue-600'
-                        : 'bg-white text-slate-600 border-slate-200 hover:border-slate-300'
+                        ? 'bg-[var(--ink)] text-[var(--paper-raised)] border-[var(--ink)]'
+                        : 'bg-[var(--paper-raised)] text-[var(--ink-2)] border-[var(--line-strong)] hover:border-[var(--ink-faint)]'
                     }`}
                   >
-                    <Icon className="w-3.5 h-3.5" fill={selected ? 'white' : fill} stroke={selected ? 'white' : stroke} />
+                    <Icon className="w-3.5 h-3.5" fill={selected ? '#faf7ef' : fill} stroke={selected ? '#faf7ef' : stroke} />
                     {name}
                   </button>
                 );
@@ -162,14 +170,14 @@ export default function CardEditorModal({ card, timelineItem, defaultColorIndex 
             <button
               type="submit"
               disabled={!title.trim()}
-              className="flex-1 px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+              className="flex-1 px-4 py-2.5 text-sm font-semibold text-[var(--paper-raised)] bg-[var(--ink)] rounded-lg hover:bg-[var(--clay)] disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-[var(--ink)] transition-colors duration-200"
             >
               {card ? 'Save Changes' : 'Create Project'}
             </button>
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 text-sm font-medium text-slate-600 bg-slate-100 rounded-lg hover:bg-slate-200 transition-colors"
+              className="px-4 py-2.5 text-sm font-medium text-[var(--ink-2)] bg-[var(--paper-sunk)] rounded-lg hover:bg-[var(--line)] transition-colors"
             >
               Cancel
             </button>

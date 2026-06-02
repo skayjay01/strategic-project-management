@@ -95,8 +95,11 @@ export default function App() {
 
   if (!loaded) {
     return (
-      <div className="h-screen flex items-center justify-center bg-slate-50">
-        <p className="text-sm text-slate-500">Loading projects...</p>
+      <div className="h-screen flex flex-col items-center justify-center gap-3">
+        <div className="eyebrow text-[var(--clay)]">Strategic Timeline</div>
+        <p className="font-display text-2xl text-[var(--ink)] reveal-fade">
+          Setting the drafting table<span className="animate-pulse">…</span>
+        </p>
       </div>
     );
   }
@@ -108,7 +111,7 @@ export default function App() {
       onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}
     >
-      <div className="h-screen flex bg-slate-50">
+      <div className="h-screen flex">
         <ProjectCardPanel />
         <Timeline />
       </div>

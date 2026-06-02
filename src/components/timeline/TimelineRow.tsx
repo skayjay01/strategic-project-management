@@ -26,7 +26,7 @@ export default function TimelineRow() {
       {columns.map((date, i) => (
         <div
           key={i}
-          className={`shrink-0 border-r border-b border-slate-100 ${isToday(date) ? 'bg-blue-50/30' : ''}`}
+          className={`shrink-0 border-r border-b border-[var(--line)] ${isToday(date) ? 'bg-[var(--clay-soft)]' : ''}`}
           style={{ width: colWidth, height: ROW_HEIGHT }}
         />
       ))}
