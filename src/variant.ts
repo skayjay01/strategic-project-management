@@ -17,7 +17,7 @@ function resolve(): UiVariant {
 export const VARIANT: UiVariant = resolve();
 
 export const VARIANT_LABEL: Record<UiVariant, string> = {
-  spotlight: 'Spotlight',
-  board: 'Status Board',
-  progress: 'Progress',
+  spotlight: 'Command Center',
+  board: 'Kanban Board',
+  progress: 'Focus Timeline',
 };

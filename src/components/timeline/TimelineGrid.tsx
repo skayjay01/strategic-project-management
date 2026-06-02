@@ -133,6 +133,14 @@ export default function TimelineGrid() {
       onPointerMove={handlePointerMove}
       onPointerLeave={handlePointerLeave}
     >
+      {/* Fade the past so the eye lands on today / what's ahead */}
+      {showTodayLine && todayIndex > 0 && (
+        <div
+          className="absolute top-0 bottom-0 left-0 z-0 pointer-events-none"
+          style={{ width: todayIndex * colWidth, background: 'linear-gradient(90deg, rgba(33,29,22,0.07), rgba(33,29,22,0.015))' }}
+        />
+      )}
+
       {Array.from({ length: rowCount }, (_, i) => (
         <TimelineRow key={i} />
       ))}

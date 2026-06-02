@@ -17,7 +17,7 @@ export const COLUMN_WIDTHS: Record<ViewMode, number> = {
   month: 150,
 };
 
-export const ROW_HEIGHT = 48;
+export const ROW_HEIGHT = 60;
 export const COLUMN_COUNT = 90;
 
 export function generateColumns(startDate: Date, viewMode: ViewMode): Date[] {
