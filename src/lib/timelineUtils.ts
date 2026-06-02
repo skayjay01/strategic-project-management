@@ -117,6 +117,18 @@ export function computeEndDate(startDateStr: string, durationDays: number): stri
   return format(addDays(parseISO(startDateStr), durationDays), 'yyyy-MM-dd');
 }
 
+// Shared offscreen canvas for measuring rendered text width (so we can decide
+// whether a project title fits inside its timeline bar or must float beside it).
+let _measureCanvas: HTMLCanvasElement | null = null;
+export function measureTextWidth(text: string, font: string): number {
+  if (typeof document === 'undefined') return text.length * 7; // SSR/test fallback
+  if (!_measureCanvas) _measureCanvas = document.createElement('canvas');
+  const ctx = _measureCanvas.getContext('2d');
+  if (!ctx) return text.length * 7;
+  ctx.font = font;
+  return ctx.measureText(text).width;
+}
+
 export function isToday(date: Date): boolean {
   const today = new Date();
   return (

@@ -44,8 +44,8 @@ export default function ProjectCard({ card, onEdit }: Props) {
         style={{ backgroundColor: card.color }}
       />
       <div className="pl-2">
-        <div className="flex items-center justify-between gap-2">
-          <h3 className="text-sm font-semibold text-slate-800 truncate">
+        <div className="flex items-start justify-between gap-2">
+          <h3 className="text-sm font-semibold text-slate-800 break-words min-w-0">
             {card.title}
           </h3>
           <div className="flex items-center gap-1 shrink-0">

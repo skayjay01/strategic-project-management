@@ -7,6 +7,7 @@ import {
   COLUMN_COUNT,
   ROW_HEIGHT,
   getColumnIndex,
+  measureTextWidth,
 } from '../../lib/timelineUtils';
 import { useMemo } from 'react';
 import { differenceInDays, parseISO, format, addDays } from 'date-fns';
@@ -17,6 +18,10 @@ const ASSIGNEE_CONFIG: Record<Assignee, { icon: typeof Zap; fill: string; stroke
   Yishan: { icon: Zap, fill: '#1a1a1a', stroke: '#1a1a1a' },
   Jack: { icon: Flame, fill: '#f97316', stroke: '#f97316' },
 };
+
+// Fonts must match the rendered classes so the fit measurement is accurate.
+const TITLE_FONT = '600 12px Inter, system-ui, -apple-system, sans-serif'; // text-xs font-semibold
+const DURATION_FONT = '400 10px Inter, system-ui, -apple-system, sans-serif'; // text-[10px]
 
 interface Props {
   item: TimelineItemType;
@@ -111,50 +116,80 @@ export default function TimelineItem({ item, isOverlapping }: Props) {
 
   const currentDuration = differenceInDays(parseISO(item.endDate), parseISO(item.startDate));
 
+  // Decide whether the title fits inside the bar. If not, it floats just to the
+  // right of the bar so the full title is always visible, never truncated.
+  const assigneeCount = card.assignees?.length ?? 0;
+  const titleWidth = measureTextWidth(card.title, TITLE_FONT);
+  const durationWidth = measureTextWidth(`${currentDuration}d`, DURATION_FONT);
+  const iconsWidth = assigneeCount * 14; // w-3.5 icons
+  const gapWidth = (assigneeCount > 0 ? 2 : 1) * 4; // gap-1 between bar children
+  const reserved = 16 /* px-2 padding */ + iconsWidth + durationWidth + gapWidth + 6 /* safety */;
+  const titleFitsInside = titleWidth <= width - reserved;
+
   return (
-    <div
-      ref={setNodeRef}
-      {...listeners}
-      {...attributes}
-      data-draggable
-      onDoubleClick={() => setEditingCardId(item.projectId)}
-      title={`${card.title} (${currentDuration}d)\n${item.startDate} — ${item.endDate}`}
-      className={`
-        group/item absolute rounded-md px-2 py-1 cursor-grab active:cursor-grabbing
-        flex items-center gap-1 overflow-hidden select-none
-        transition-shadow duration-150
-        hover:shadow-md hover:brightness-105
-        ${isDragging ? 'opacity-50 shadow-lg z-50' : 'z-10'}
-        ${isOverlapping ? 'ring-2 ring-red-500 ring-offset-1' : ''}
-      `}
-      style={{
-        left,
-        width,
-        top,
-        height: ROW_HEIGHT - 8,
-        backgroundColor: card.color,
-      }}
-    >
-      <span className="text-xs font-semibold text-white truncate">
-        {card.title}
-      </span>
-      {card.assignees?.length > 0 && (
-        <div className="flex items-center shrink-0">
-          {card.assignees.map((name) => {
-            const { icon: Icon, fill, stroke } = ASSIGNEE_CONFIG[name];
-            return <Icon key={name} className="w-3.5 h-3.5 drop-shadow-sm" fill={fill} stroke={stroke} />;
-          })}
+    <>
+      <div
+        ref={setNodeRef}
+        {...listeners}
+        {...attributes}
+        data-draggable
+        onDoubleClick={() => setEditingCardId(item.projectId)}
+        title={`${card.title} (${currentDuration}d)\n${item.startDate} — ${item.endDate}`}
+        className={`
+          group/item absolute rounded-md px-2 py-1 cursor-grab active:cursor-grabbing
+          flex items-center gap-1 overflow-hidden select-none
+          transition-shadow duration-150
+          hover:shadow-md hover:brightness-105
+          ${isDragging ? 'opacity-50 shadow-lg z-50' : 'z-10'}
+          ${isOverlapping ? 'ring-2 ring-red-500 ring-offset-1' : ''}
+        `}
+        style={{
+          left,
+          width,
+          top,
+          height: ROW_HEIGHT - 8,
+          backgroundColor: card.color,
+        }}
+      >
+        {titleFitsInside && (
+          <span className="text-xs font-semibold text-white whitespace-nowrap">
+            {card.title}
+          </span>
+        )}
+        {assigneeCount > 0 && (
+          <div className="flex items-center shrink-0">
+            {card.assignees.map((name) => {
+              const { icon: Icon, fill, stroke } = ASSIGNEE_CONFIG[name];
+              return <Icon key={name} className="w-3.5 h-3.5 drop-shadow-sm" fill={fill} stroke={stroke} />;
+            })}
+          </div>
+        )}
+        <span className="text-[10px] text-white/70 shrink-0">
+          {currentDuration}d
+        </span>
+        {/* Resize handle */}
+        <div
+          onPointerDown={handleResizeStart}
+          className="absolute right-0 top-0 bottom-0 w-2 cursor-ew-resize opacity-0 group-hover/item:opacity-100 transition-opacity"
+          style={{ backgroundColor: 'rgba(255,255,255,0.3)' }}
+        />
+      </div>
+
+      {/* Title floats beside the bar when it can't fit inside — always fully visible.
+          z-[15] keeps it above neighbouring bars (z-10) but below the today line (z-20). */}
+      {!titleFitsInside && !isDragging && (
+        <div
+          className="absolute z-[15] flex items-center pointer-events-none"
+          style={{ left: left + width + 6, top, height: ROW_HEIGHT - 8 }}
+        >
+          <span
+            className="text-xs font-semibold whitespace-nowrap px-1.5 py-0.5 rounded-md bg-white/90 shadow-sm ring-1 ring-black/5"
+            style={{ color: card.color }}
+          >
+            {card.title}
+          </span>
         </div>
       )}
-      <span className="text-[10px] text-white/70 shrink-0">
-        {currentDuration}d
-      </span>
-      {/* Resize handle */}
-      <div
-        onPointerDown={handleResizeStart}
-        className="absolute right-0 top-0 bottom-0 w-2 cursor-ew-resize opacity-0 group-hover/item:opacity-100 transition-opacity"
-        style={{ backgroundColor: 'rgba(255,255,255,0.3)' }}
-      />
-    </div>
+    </>
   );
 }
