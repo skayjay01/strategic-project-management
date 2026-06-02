@@ -20,8 +20,22 @@ const ASSIGNEE_CONFIG: Record<Assignee, { icon: typeof Zap; fill: string; stroke
 };
 
 // Fonts must match the rendered classes so the fit measurement is accurate.
-const TITLE_FONT = '600 12px Inter, system-ui, -apple-system, sans-serif'; // text-xs font-semibold
-const DURATION_FONT = '400 10px Inter, system-ui, -apple-system, sans-serif'; // text-[10px]
+const TITLE_FONT = '600 12px "Bricolage Grotesque", ui-sans-serif, system-ui, sans-serif'; // text-xs font-semibold (font-ui)
+const DURATION_FONT = '400 10px "Space Mono", ui-monospace, monospace'; // text-[10px] (font-mono-num)
+
+// Pick legible text color for a chip based on its background luminance, so
+// titles stay readable on both dark (blue/violet) and light (amber/lime) bars.
+function chipInk(hex: string): { text: string; faint: string } {
+  const h = hex.replace('#', '');
+  if (h.length < 6) return { text: 'rgba(255,253,247,0.96)', faint: 'rgba(255,253,247,0.72)' };
+  const r = parseInt(h.slice(0, 2), 16);
+  const g = parseInt(h.slice(2, 4), 16);
+  const b = parseInt(h.slice(4, 6), 16);
+  const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+  return luminance > 0.6
+    ? { text: 'rgba(26,22,15,0.92)', faint: 'rgba(26,22,15,0.62)' }       // dark ink on light bar
+    : { text: 'rgba(255,253,247,0.97)', faint: 'rgba(255,253,247,0.74)' }; // light ink on dark bar
+}
 
 interface Props {
   item: TimelineItemType;
@@ -126,6 +140,8 @@ export default function TimelineItem({ item, isOverlapping }: Props) {
   const reserved = 16 /* px-2 padding */ + iconsWidth + durationWidth + gapWidth + 6 /* safety */;
   const titleFitsInside = titleWidth <= width - reserved;
 
+  const ink = chipInk(card.color);
+
   return (
     <>
       <div
@@ -136,12 +152,12 @@ export default function TimelineItem({ item, isOverlapping }: Props) {
         onDoubleClick={() => setEditingCardId(item.projectId)}
         title={`${card.title} (${currentDuration}d)\n${item.startDate} — ${item.endDate}`}
         className={`
-          group/item absolute rounded-md px-2 py-1 cursor-grab active:cursor-grabbing
+          group/item absolute rounded-[7px] px-2 py-1 cursor-grab active:cursor-grabbing
           flex items-center gap-1 overflow-hidden select-none
-          transition-shadow duration-150
-          hover:shadow-md hover:brightness-105
-          ${isDragging ? 'opacity-50 shadow-lg z-50' : 'z-10'}
-          ${isOverlapping ? 'ring-2 ring-red-500 ring-offset-1' : ''}
+          transition-[filter,transform] duration-150
+          hover:brightness-[1.06]
+          ${isDragging ? 'opacity-60 z-50 rotate-[-0.5deg]' : 'z-10'}
+          ${isOverlapping ? 'ring-2 ring-[var(--clay)] ring-offset-1 ring-offset-[var(--paper-raised)]' : ''}
         `}
         style={{
           left,
@@ -149,29 +165,34 @@ export default function TimelineItem({ item, isOverlapping }: Props) {
           top,
           height: ROW_HEIGHT - 8,
           backgroundColor: card.color,
+          backgroundImage:
+            'linear-gradient(180deg, rgba(255,255,255,0.20) 0%, rgba(255,255,255,0) 45%, rgba(0,0,0,0.13) 100%)',
+          boxShadow: isDragging
+            ? '0 12px 26px -6px rgba(33,29,22,0.45), inset 0 1px 0 rgba(255,255,255,0.3)'
+            : '0 1px 2px rgba(33,29,22,0.22), inset 0 1px 0 rgba(255,255,255,0.28)',
         }}
       >
         {titleFitsInside && (
-          <span className="text-xs font-semibold text-white whitespace-nowrap">
+          <span className="font-ui text-xs font-semibold whitespace-nowrap" style={{ color: ink.text }}>
             {card.title}
           </span>
         )}
         {assigneeCount > 0 && (
           <div className="flex items-center shrink-0">
             {card.assignees.map((name) => {
-              const { icon: Icon, fill, stroke } = ASSIGNEE_CONFIG[name];
-              return <Icon key={name} className="w-3.5 h-3.5 drop-shadow-sm" fill={fill} stroke={stroke} />;
+              const { icon: Icon } = ASSIGNEE_CONFIG[name];
+              return <Icon key={name} className="w-3.5 h-3.5" fill={ink.text} stroke={ink.text} />;
             })}
           </div>
         )}
-        <span className="text-[10px] text-white/70 shrink-0">
+        <span className="font-mono-num text-[10px] shrink-0" style={{ color: ink.faint }}>
           {currentDuration}d
         </span>
         {/* Resize handle */}
         <div
           onPointerDown={handleResizeStart}
-          className="absolute right-0 top-0 bottom-0 w-2 cursor-ew-resize opacity-0 group-hover/item:opacity-100 transition-opacity"
-          style={{ backgroundColor: 'rgba(255,255,255,0.3)' }}
+          className="absolute right-0 top-1 bottom-1 w-1.5 rounded-full cursor-ew-resize opacity-0 group-hover/item:opacity-100 transition-opacity"
+          style={{ backgroundColor: ink.faint }}
         />
       </div>
 
@@ -183,9 +204,9 @@ export default function TimelineItem({ item, isOverlapping }: Props) {
           style={{ left: left + width + 6, top, height: ROW_HEIGHT - 8 }}
         >
           <span
-            className="text-xs font-semibold whitespace-nowrap px-1.5 py-0.5 rounded-md bg-white/90 shadow-sm ring-1 ring-black/5"
-            style={{ color: card.color }}
+            className="font-ui text-xs font-semibold whitespace-nowrap inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-[var(--paper-raised)] text-[var(--ink)] ring-1 ring-[var(--line-strong)] shadow-[0_3px_10px_-3px_rgba(33,29,22,0.32)]"
           >
+            <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ backgroundColor: card.color }} />
             {card.title}
           </span>
         </div>

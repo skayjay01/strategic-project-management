@@ -22,35 +22,35 @@ export default function TimelineControls() {
   const assigneeFilter = useProjectStore((s) => s.assigneeFilter);
   const setAssigneeFilter = useProjectStore((s) => s.setAssigneeFilter);
 
+  const seg = (active: boolean) =>
+    `px-3.5 py-1.5 text-xs font-medium rounded-md transition-all duration-150 ${
+      active
+        ? 'bg-[var(--ink)] text-[var(--paper-raised)] shadow-[0_1px_2px_rgba(33,29,22,0.25)]'
+        : 'text-[var(--ink-soft)] hover:text-[var(--ink)]'
+    }`;
+
   return (
-    <div className="flex items-center gap-3 p-3 border-b border-slate-200 bg-white">
-      <div className="flex items-center bg-slate-100 rounded-lg p-0.5">
+    <div className="flex items-center gap-3 px-4 py-2.5 border-b border-[var(--line-strong)] bg-[var(--paper-raised)] reveal-fade">
+      <div className="flex items-center gap-0.5 bg-[var(--paper-sunk)] rounded-lg p-1">
         {viewModes.map((mode) => (
-          <button
-            key={mode.value}
-            onClick={() => setViewMode(mode.value)}
-            className={`
-              px-3 py-1.5 text-xs font-medium rounded-md transition-all
-              ${viewMode === mode.value
-                ? 'bg-white text-slate-800 shadow-sm'
-                : 'text-slate-500 hover:text-slate-700'}
-            `}
-          >
+          <button key={mode.value} onClick={() => setViewMode(mode.value)} className={seg(viewMode === mode.value)}>
             {mode.label}
           </button>
         ))}
       </div>
 
-      <div className="flex items-center gap-1">
+      <div className="flex items-center gap-0.5">
         <button
           onClick={() => navigateTimeline('left')}
-          className="p-1.5 rounded-md hover:bg-slate-100 text-slate-600 transition-colors"
+          aria-label="Earlier"
+          className="p-1.5 rounded-lg text-[var(--ink-2)] hover:bg-[var(--paper-sunk)] hover:text-[var(--ink)] transition-colors"
         >
           <ChevronLeft className="w-4 h-4" />
         </button>
         <button
           onClick={() => navigateTimeline('right')}
-          className="p-1.5 rounded-md hover:bg-slate-100 text-slate-600 transition-colors"
+          aria-label="Later"
+          className="p-1.5 rounded-lg text-[var(--ink-2)] hover:bg-[var(--paper-sunk)] hover:text-[var(--ink)] transition-colors"
         >
           <ChevronRight className="w-4 h-4" />
         </button>
@@ -58,38 +58,32 @@ export default function TimelineControls() {
 
       <button
         onClick={goToToday}
-        className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-slate-600 hover:text-slate-800 hover:bg-slate-100 rounded-md transition-colors"
+        className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-[var(--ink-2)] hover:text-[var(--clay-deep)] hover:bg-[var(--clay-soft)] rounded-lg transition-colors"
       >
         <Calendar className="w-3.5 h-3.5" />
         Today
       </button>
 
-      <div className="ml-auto flex items-center gap-1.5">
-        <User className="w-3.5 h-3.5 text-slate-400" />
-        <div className="flex items-center bg-slate-100 rounded-lg p-0.5">
-          <button
-            onClick={() => setAssigneeFilter(null)}
-            className={`px-2.5 py-1 text-xs font-medium rounded-md transition-all ${
-              assigneeFilter === null
-                ? 'bg-white text-slate-800 shadow-sm'
-                : 'text-slate-500 hover:text-slate-700'
-            }`}
-          >
+      <div className="ml-auto flex items-center gap-2">
+        <User className="w-3.5 h-3.5 text-[var(--ink-faint)]" />
+        <div className="flex items-center gap-0.5 bg-[var(--paper-sunk)] rounded-lg p-1">
+          <button onClick={() => setAssigneeFilter(null)} className={seg(assigneeFilter === null).replace('px-3.5', 'px-2.5')}>
             All
           </button>
           {ASSIGNEE_OPTIONS.map((name) => {
             const { icon: Icon, fill, stroke } = ASSIGNEE_CONFIG[name];
+            const active = assigneeFilter === name;
             return (
               <button
                 key={name}
-                onClick={() => setAssigneeFilter(assigneeFilter === name ? null : name)}
-                className={`flex items-center gap-1 px-2.5 py-1 text-xs font-medium rounded-md transition-all ${
-                  assigneeFilter === name
-                    ? 'bg-white text-slate-800 shadow-sm'
-                    : 'text-slate-500 hover:text-slate-700'
+                onClick={() => setAssigneeFilter(active ? null : name)}
+                className={`flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium rounded-md transition-all duration-150 ${
+                  active
+                    ? 'bg-[var(--ink)] text-[var(--paper-raised)] shadow-[0_1px_2px_rgba(33,29,22,0.25)]'
+                    : 'text-[var(--ink-soft)] hover:text-[var(--ink)]'
                 }`}
               >
-                <Icon className="w-3 h-3" fill={fill} stroke={stroke} />
+                <Icon className="w-3 h-3" fill={active ? '#faf7ef' : fill} stroke={active ? '#faf7ef' : stroke} />
                 {name}
               </button>
             );

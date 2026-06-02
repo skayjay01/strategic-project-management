@@ -33,60 +33,66 @@ export default function ProjectCard({ card, onEdit }: Props) {
       {...listeners}
       {...attributes}
       className={`
-        group relative rounded-lg bg-white border border-slate-200 p-3 mb-2
-        transition-all duration-150 select-none
-        ${isOnTimeline ? 'opacity-40 cursor-default' : 'cursor-grab hover:shadow-md hover:border-slate-300 active:cursor-grabbing'}
-        ${isDragging ? 'opacity-50 shadow-lg' : ''}
+        group relative rounded-xl bg-[var(--paper-raised)] border mb-2.5 p-3.5
+        transition-all duration-200 select-none
+        ${isOnTimeline
+          ? 'opacity-45 cursor-default border-[var(--line)] grayscale-[0.3]'
+          : 'cursor-grab active:cursor-grabbing border-[var(--line-strong)] shadow-[0_1px_2px_rgba(33,29,22,0.06)] hover:shadow-[0_8px_22px_-8px_rgba(33,29,22,0.28)] hover:-translate-y-0.5 hover:border-[var(--ink-faint)]'}
+        ${isDragging ? 'opacity-60 shadow-xl rotate-[-0.5deg]' : ''}
       `}
     >
+      {/* color spine */}
       <div
-        className="absolute left-0 top-0 bottom-0 w-1 rounded-l-lg"
+        className="absolute left-0 top-3 bottom-3 w-[3px] rounded-full"
         style={{ backgroundColor: card.color }}
       />
-      <div className="pl-2">
+      {isOnTimeline && (
+        <div className="absolute top-2.5 right-3 eyebrow text-[9px] text-[var(--ink-faint)]">placed</div>
+      )}
+      <div className="pl-2.5">
         <div className="flex items-start justify-between gap-2">
-          <h3 className="text-sm font-semibold text-slate-800 break-words min-w-0">
+          <h3 className="font-display text-[15px] leading-[1.2] font-medium text-[var(--ink)] break-words min-w-0">
             {card.title}
           </h3>
-          <div className="flex items-center gap-1 shrink-0">
+          <div className="flex items-center gap-0.5 shrink-0 -mr-1">
             <button
               onPointerDown={(e) => e.stopPropagation()}
               onClick={(e) => { e.stopPropagation(); onEdit(card); }}
-              className="hidden group-hover:flex p-1 rounded hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition-colors"
+              className="hidden group-hover:flex p-1.5 rounded-lg text-[var(--ink-faint)] hover:bg-[var(--paper-sunk)] hover:text-[var(--ink)] transition-colors"
             >
-              <Pencil className="w-3 h-3" />
+              <Pencil className="w-3.5 h-3.5" />
             </button>
             <button
               onPointerDown={(e) => e.stopPropagation()}
               onClick={(e) => { e.stopPropagation(); deleteCard(card.id); }}
-              className="hidden group-hover:flex p-1 rounded hover:bg-red-50 text-slate-400 hover:text-red-500 transition-colors"
+              className="hidden group-hover:flex p-1.5 rounded-lg text-[var(--ink-faint)] hover:bg-[var(--clay-soft)] hover:text-[var(--clay-deep)] transition-colors"
             >
-              <Trash2 className="w-3 h-3" />
+              <Trash2 className="w-3.5 h-3.5" />
             </button>
-            <span
-              className="text-xs font-medium px-1.5 py-0.5 rounded-full text-white"
-              style={{ backgroundColor: card.color }}
-            >
-              {card.duration}d
-            </span>
           </div>
         </div>
-        {card.assignees?.length > 0 && (
-          <div className="flex items-center gap-1 mt-1.5">
-            {card.assignees.map((name) => {
-              const { icon: Icon, fill, stroke } = ASSIGNEE_CONFIG[name];
-              return (
-                <span key={name} className="flex items-center gap-0.5 text-[10px] font-medium text-slate-500">
-                  <Icon className="w-3 h-3" fill={fill} stroke={stroke} />
-                  {name}
-                </span>
-              );
-            })}
-          </div>
+
+        <div className="flex items-center flex-wrap gap-x-2.5 gap-y-1 mt-2">
+          <span className="inline-flex items-center gap-1.5 font-mono-num text-[11px] text-[var(--ink-2)]">
+            <span className="w-2 h-2 rounded-[3px]" style={{ backgroundColor: card.color }} />
+            {card.duration}d
+          </span>
+          {card.assignees?.map((name) => {
+            const { icon: Icon, fill, stroke } = ASSIGNEE_CONFIG[name];
+            return (
+              <span key={name} className="inline-flex items-center gap-1 text-[10px] font-medium text-[var(--ink-soft)] uppercase tracking-wide">
+                <Icon className="w-3 h-3" fill={fill} stroke={stroke} />
+                {name}
+              </span>
+            );
+          })}
+        </div>
+
+        {card.description && (
+          <p className="text-xs text-[var(--ink-soft)] mt-1.5 line-clamp-2 leading-relaxed">
+            {card.description}
+          </p>
         )}
-        <p className="text-xs text-slate-500 mt-1 line-clamp-2">
-          {card.description}
-        </p>
       </div>
     </div>
   );

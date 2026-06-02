@@ -128,7 +128,7 @@ export default function TimelineGrid() {
     <div
       ref={mergedRef}
       data-timeline-grid
-      className="relative"
+      className="relative bg-[var(--paper-raised)]"
       style={{ width: totalWidth, minHeight: containerHeight || undefined }}
       onPointerMove={handlePointerMove}
       onPointerLeave={handlePointerLeave}
@@ -143,24 +143,32 @@ export default function TimelineGrid() {
 
       {showTodayLine && (
         <div
-          className="absolute top-0 bottom-0 w-0.5 bg-blue-500 z-20 pointer-events-none"
+          className="absolute top-0 bottom-0 z-20 pointer-events-none"
           style={{ left: todayIndex * colWidth }}
-        />
+        >
+          <div
+            className="absolute top-0 bottom-0 w-[2px] bg-[var(--clay)]"
+            style={{ animation: 'today-pulse 2.8s ease-in-out infinite', boxShadow: '0 0 8px rgba(194,86,47,0.55)' }}
+          />
+          <div className="absolute top-0 -translate-x-1/2 eyebrow text-[8px] text-[var(--paper-raised)] bg-[var(--clay)] px-1.5 py-0.5 rounded-b-[3px] whitespace-nowrap">
+            Today
+          </div>
+        </div>
       )}
 
       {active && indicator && (
         <>
           <div
-            className="absolute top-0 bottom-0 w-0.5 bg-blue-400 z-30 pointer-events-none"
+            className="absolute top-0 bottom-0 w-0 border-l-2 border-dashed border-[var(--ink-soft)] z-30 pointer-events-none"
             style={{ left: indicator.x }}
           />
           <div
-            className="absolute left-0 right-0 bg-blue-100/30 z-0 pointer-events-none"
+            className="absolute left-0 right-0 bg-[var(--clay-soft)] z-0 pointer-events-none"
             style={{ top: indicator.row * ROW_HEIGHT, height: ROW_HEIGHT }}
           />
           <div
-            className="absolute z-30 pointer-events-none bg-blue-600 text-white text-[10px] font-medium px-1.5 py-0.5 rounded -translate-x-1/2"
-            style={{ left: indicator.x, top: indicator.row * ROW_HEIGHT - 20 }}
+            className="absolute z-30 pointer-events-none bg-[var(--ink)] text-[var(--paper-raised)] font-mono-num text-[10px] px-2 py-0.5 rounded -translate-x-1/2 shadow-md"
+            style={{ left: indicator.x, top: indicator.row * ROW_HEIGHT - 22 }}
           >
             {format(new Date(indicator.date + 'T00:00:00'), 'MMM d, yyyy')}
           </div>

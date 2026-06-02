@@ -62,36 +62,41 @@ export default function ProjectCardPanel() {
     <div
       ref={setNodeRef}
       className={`
-        w-72 shrink-0 h-full bg-slate-50 border-r border-slate-200
-        flex flex-col overflow-hidden transition-colors
-        ${isOver ? 'bg-red-50 border-red-200' : ''}
+        w-72 shrink-0 h-full border-r flex flex-col overflow-hidden transition-colors duration-200
+        ${isOver ? 'bg-[var(--clay-soft)] border-[var(--clay)]' : 'bg-[var(--paper-panel)] border-[var(--line-strong)]'}
       `}
     >
-      <div className="p-4 border-b border-slate-200">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <LayoutGrid className="w-5 h-5 text-slate-600" />
-            <h2 className="text-base font-bold text-slate-800">Projects</h2>
-          </div>
+      <div className="px-5 pt-5 pb-4 border-b border-[var(--line)] reveal-up">
+        <div className="eyebrow text-[var(--clay)] flex items-center gap-1.5">
+          <LayoutGrid className="w-3 h-3" />
+          Strategic Timeline
+        </div>
+        <div className="flex items-end justify-between mt-2">
+          <h2 className="font-display text-[28px] leading-none font-semibold text-[var(--ink)]">
+            Projects
+          </h2>
           <button
             onClick={handleAdd}
-            className="p-1.5 rounded-md hover:bg-slate-200 text-slate-500 hover:text-slate-700 transition-colors"
+            aria-label="New project"
+            className="group flex items-center justify-center w-8 h-8 rounded-full bg-[var(--ink)] text-[var(--paper-raised)] hover:bg-[var(--clay)] transition-colors duration-200 shadow-sm"
           >
-            <Plus className="w-4 h-4" />
+            <Plus className="w-4 h-4 transition-transform duration-200 group-hover:rotate-90" />
           </button>
         </div>
-        <p className="text-xs text-slate-500 mt-1">
-          Drag cards to the timeline
+        <p className="mt-2 text-xs text-[var(--ink-soft)] flex items-center gap-2">
+          <span className="font-mono-num text-[var(--ink-2)]">{cards.length}</span>
+          <span className="w-1 h-1 rounded-full bg-[var(--ink-faint)]" />
+          drag onto the timeline
         </p>
       </div>
-      <div className="flex-1 overflow-y-auto p-3">
+      <div className="flex-1 overflow-y-auto panel-scroll px-3 py-3 stagger">
         {cards.map((card) => (
           <ProjectCard key={card.id} card={card} onEdit={handleEdit} />
         ))}
       </div>
       {isOver && (
-        <div className="p-3 text-center text-xs text-red-500 font-medium bg-red-50 border-t border-red-200">
-          Drop here to remove from timeline
+        <div className="px-3 py-3 text-center eyebrow text-[var(--clay-deep)] bg-[var(--clay-soft)] border-t border-[var(--clay)]">
+          Release to remove from timeline
         </div>
       )}
       {showModal && (
