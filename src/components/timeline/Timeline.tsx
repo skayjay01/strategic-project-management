@@ -3,6 +3,7 @@ import { useProjectStore } from '../../store/useProjectStore';
 import TimelineControls from './TimelineControls';
 import TimelineHeader from './TimelineHeader';
 import TimelineGrid from './TimelineGrid';
+import StatusStrip from './StatusStrip';
 import {
   COLUMN_WIDTHS,
   getTodayColumnIndex,
@@ -80,6 +81,7 @@ export default function Timeline() {
   return (
     <div className="flex-1 flex flex-col overflow-hidden">
       <TimelineControls />
+      <StatusStrip />
       <div
         ref={scrollRef}
         className="flex-1 overflow-auto timeline-scroll cursor-grab"

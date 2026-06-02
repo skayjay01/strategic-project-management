@@ -13,6 +13,8 @@ import { useMemo } from 'react';
 import { differenceInDays, parseISO, format, addDays } from 'date-fns';
 import { Zap, Flame } from 'lucide-react';
 import type { Assignee } from '../../types';
+import { getStatus, elapsedFraction, daysUntil, STATUS_META } from '../../lib/status';
+import { VARIANT } from '../../variant';
 
 const ASSIGNEE_CONFIG: Record<Assignee, { icon: typeof Zap; fill: string; stroke: string }> = {
   Yishan: { icon: Zap, fill: '#1a1a1a', stroke: '#1a1a1a' },
@@ -129,18 +131,50 @@ export default function TimelineItem({ item, isOverlapping }: Props) {
   if (colEnd < 0 || colStart >= COLUMN_COUNT) return null;
 
   const currentDuration = differenceInDays(parseISO(item.endDate), parseISO(item.startDate));
+  const status = getStatus(item.startDate, item.endDate);
+  const sm = STATUS_META[status];
+
+  // Right-edge meta label — varies by variant/status (Progress shows time-to-go).
+  let metaLabel = `${currentDuration}d`;
+  if (VARIANT === 'progress') {
+    if (status === 'active') metaLabel = `${Math.max(0, daysUntil(item.endDate))}d left`;
+    else if (status === 'upcoming') metaLabel = `in ${Math.max(0, daysUntil(item.startDate))}d`;
+    else metaLabel = 'done';
+  }
 
   // Decide whether the title fits inside the bar. If not, it floats just to the
   // right of the bar so the full title is always visible, never truncated.
+  // Measure against the ACTUAL meta label so the fit stays correct per variant.
   const assigneeCount = card.assignees?.length ?? 0;
   const titleWidth = measureTextWidth(card.title, TITLE_FONT);
-  const durationWidth = measureTextWidth(`${currentDuration}d`, DURATION_FONT);
+  const durationWidth = measureTextWidth(metaLabel, DURATION_FONT);
   const iconsWidth = assigneeCount * 14; // w-3.5 icons
   const gapWidth = (assigneeCount > 0 ? 2 : 1) * 4; // gap-1 between bar children
-  const reserved = 16 /* px-2 padding */ + iconsWidth + durationWidth + gapWidth + 6 /* safety */;
+  const capWidth = VARIANT === 'board' ? 6 : 0; // status cap eats a little left room
+  const reserved = 16 /* px-2 padding */ + iconsWidth + durationWidth + gapWidth + capWidth + 6 /* safety */;
   const titleFitsInside = titleWidth <= width - reserved;
 
   const ink = chipInk(card.color);
+  const frac = elapsedFraction(item.startDate, item.endDate);
+
+  // Status emphasis per variant (opacity/filter + a status ring layered into boxShadow).
+  let chipOpacity = 1;
+  let chipFilter = 'none';
+  if (VARIANT === 'spotlight') {
+    if (status === 'done') { chipOpacity = 0.42; chipFilter = 'grayscale(0.55)'; }
+    else if (status === 'upcoming') chipOpacity = 0.86;
+  } else if (VARIANT === 'progress') {
+    if (status === 'done') { chipOpacity = 0.5; chipFilter = 'grayscale(0.45)'; }
+    else if (status === 'upcoming') chipOpacity = 0.62;
+  }
+  const baseShadow = isDragging
+    ? '0 12px 26px -6px rgba(33,29,22,0.45), inset 0 1px 0 rgba(255,255,255,0.3)'
+    : '0 1px 2px rgba(33,29,22,0.22), inset 0 1px 0 rgba(255,255,255,0.28)';
+  const rings: string[] = [];
+  if (isOverlapping) rings.push('0 0 0 2px #c2562f');
+  if (VARIANT === 'spotlight' && status === 'active') { rings.push('0 0 0 2px #16a34a'); rings.push('0 0 16px rgba(22,163,74,0.5)'); }
+  if (VARIANT === 'board') rings.push(`0 0 0 2px ${sm.color}`);
+  const boxShadow = [baseShadow, ...rings].join(', ');
 
   return (
     <>
@@ -150,14 +184,13 @@ export default function TimelineItem({ item, isOverlapping }: Props) {
         {...attributes}
         data-draggable
         onDoubleClick={() => setEditingCardId(item.projectId)}
-        title={`${card.title} (${currentDuration}d)\n${item.startDate} — ${item.endDate}`}
+        title={`${card.title} · ${sm.label} (${currentDuration}d)\n${item.startDate} — ${item.endDate}`}
         className={`
           group/item absolute rounded-[7px] px-2 py-1 cursor-grab active:cursor-grabbing
           flex items-center gap-1 overflow-hidden select-none
-          transition-[filter,transform] duration-150
+          transition-[filter,transform,opacity] duration-150
           hover:brightness-[1.06]
-          ${isDragging ? 'opacity-60 z-50 rotate-[-0.5deg]' : 'z-10'}
-          ${isOverlapping ? 'ring-2 ring-[var(--clay)] ring-offset-1 ring-offset-[var(--paper-raised)]' : ''}
+          ${isDragging ? 'z-50 rotate-[-0.5deg]' : 'z-10'}
         `}
         style={{
           left,
@@ -167,31 +200,43 @@ export default function TimelineItem({ item, isOverlapping }: Props) {
           backgroundColor: card.color,
           backgroundImage:
             'linear-gradient(180deg, rgba(255,255,255,0.20) 0%, rgba(255,255,255,0) 45%, rgba(0,0,0,0.13) 100%)',
-          boxShadow: isDragging
-            ? '0 12px 26px -6px rgba(33,29,22,0.45), inset 0 1px 0 rgba(255,255,255,0.3)'
-            : '0 1px 2px rgba(33,29,22,0.22), inset 0 1px 0 rgba(255,255,255,0.28)',
+          boxShadow,
+          opacity: isDragging ? 0.6 : chipOpacity,
+          filter: chipFilter,
         }}
       >
+        {/* Progress: fade the not-yet-elapsed remainder so the filled part reads as progress */}
+        {VARIANT === 'progress' && status === 'active' && (
+          <div
+            className="absolute top-0 bottom-0 right-0 z-0 pointer-events-none"
+            style={{ left: `${Math.round(frac * 100)}%`, backgroundColor: 'rgba(250,247,239,0.5)', borderLeft: '1.5px solid rgba(255,255,255,0.75)' }}
+          />
+        )}
+        {/* Board: status-coloured cap */}
+        {VARIANT === 'board' && (
+          <div className="absolute left-0 top-0 bottom-0 w-1 z-0" style={{ backgroundColor: sm.color }} />
+        )}
+
         {titleFitsInside && (
-          <span className="font-ui text-xs font-semibold whitespace-nowrap" style={{ color: ink.text }}>
+          <span className="relative z-[1] font-ui text-xs font-semibold whitespace-nowrap" style={{ color: ink.text }}>
             {card.title}
           </span>
         )}
         {assigneeCount > 0 && (
-          <div className="flex items-center shrink-0">
+          <div className="relative z-[1] flex items-center shrink-0">
             {card.assignees.map((name) => {
               const { icon: Icon } = ASSIGNEE_CONFIG[name];
               return <Icon key={name} className="w-3.5 h-3.5" fill={ink.text} stroke={ink.text} />;
             })}
           </div>
         )}
-        <span className="font-mono-num text-[10px] shrink-0" style={{ color: ink.faint }}>
-          {currentDuration}d
+        <span className="relative z-[1] font-mono-num text-[10px] shrink-0" style={{ color: ink.faint }}>
+          {metaLabel}
         </span>
         {/* Resize handle */}
         <div
           onPointerDown={handleResizeStart}
-          className="absolute right-0 top-1 bottom-1 w-1.5 rounded-full cursor-ew-resize opacity-0 group-hover/item:opacity-100 transition-opacity"
+          className="absolute right-0 top-1 bottom-1 w-1.5 rounded-full cursor-ew-resize opacity-0 group-hover/item:opacity-100 transition-opacity z-[3]"
           style={{ backgroundColor: ink.faint }}
         />
       </div>
