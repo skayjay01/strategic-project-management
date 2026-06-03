@@ -5,8 +5,7 @@ import { useProjectStore } from '../../store/useProjectStore';
 import ProjectCard from './ProjectCard';
 import CardEditorModal from './CardEditorModal';
 import { LayoutGrid, Plus } from 'lucide-react';
-import { getStatus, elapsedFraction, daysUntil, STATUS_META, type ProjectStatus } from '../../lib/status';
-import { VARIANT, VARIANT_LABEL } from '../../variant';
+import { getStatus, elapsedFraction, daysUntil, type ProjectStatus } from '../../lib/status';
 
 type CardInfo = { status?: ProjectStatus; elapsed?: number; timeLabel?: string };
 
@@ -61,11 +60,6 @@ export default function ProjectCardPanel() {
     return map;
   }, [allCards, timelineItems]);
 
-  const statusOrder = (card: ProjectCardType) => {
-    const st = infoById.get(card.id)?.status;
-    return st ? STATUS_META[st].order : 1.5; // unscheduled sits between upcoming and done
-  };
-
   const renderCard = (card: ProjectCardType) => {
     const info = infoById.get(card.id) ?? {};
     return (
@@ -110,7 +104,6 @@ export default function ProjectCardPanel() {
         <div className="eyebrow text-[var(--clay)] flex items-center gap-1.5">
           <LayoutGrid className="w-3 h-3" />
           Strategic Timeline
-          <span className="text-[var(--ink-faint)]">· {VARIANT_LABEL[VARIANT]}</span>
         </div>
         <div className="flex items-end justify-between mt-2">
           <h2 className="font-display text-[28px] leading-none font-semibold text-[var(--ink)]">
@@ -131,32 +124,9 @@ export default function ProjectCardPanel() {
         </p>
       </div>
       <div className="flex-1 overflow-y-auto panel-scroll px-3 py-3">
-        {VARIANT === 'board' ? (
-          (['active', 'upcoming', 'done', 'unscheduled'] as const).map((key) => {
-            const group = cards.filter((c) => (infoById.get(c.id)?.status ?? 'unscheduled') === key);
-            if (group.length === 0) return null;
-            const label = key === 'unscheduled' ? 'Unscheduled' : STATUS_META[key].label;
-            const color = key === 'unscheduled' ? 'var(--ink-faint)' : STATUS_META[key].color;
-            return (
-              <div key={key} className="mb-4">
-                <div className="flex items-center gap-2 px-1 mb-2">
-                  <span className="w-2 h-2 rounded-full" style={{ backgroundColor: color }} />
-                  <span className="eyebrow" style={{ color }}>{label}</span>
-                  <span className="font-mono-num text-[10px] text-[var(--ink-faint)]">{group.length}</span>
-                  <span className="flex-1 h-px bg-[var(--line)]" />
-                </div>
-                {group.map(renderCard)}
-              </div>
-            );
-          })
-        ) : (
-          <div className="stagger">
-            {(VARIANT === 'spotlight'
-              ? [...cards].sort((a, b) => statusOrder(a) - statusOrder(b))
-              : cards
-            ).map(renderCard)}
-          </div>
-        )}
+        <div className="stagger">
+          {cards.map(renderCard)}
+        </div>
       </div>
       {isOver && (
         <div className="px-3 py-3 text-center eyebrow text-[var(--clay-deep)] bg-[var(--clay-soft)] border-t border-[var(--clay)]">

@@ -14,7 +14,6 @@ import { differenceInDays, parseISO, format, addDays } from 'date-fns';
 import { Zap, Flame } from 'lucide-react';
 import type { Assignee } from '../../types';
 import { getStatus, elapsedFraction, daysUntil, STATUS_META } from '../../lib/status';
-import { VARIANT } from '../../variant';
 
 const ASSIGNEE_CONFIG: Record<Assignee, { icon: typeof Zap; fill: string; stroke: string }> = {
   Yishan: { icon: Zap, fill: '#1a1a1a', stroke: '#1a1a1a' },
@@ -134,13 +133,11 @@ export default function TimelineItem({ item, isOverlapping }: Props) {
   const status = getStatus(item.startDate, item.endDate);
   const sm = STATUS_META[status];
 
-  // Right-edge meta label — varies by variant/status (Progress shows time-to-go).
-  let metaLabel = `${currentDuration}d`;
-  if (VARIANT === 'progress') {
-    if (status === 'active') metaLabel = `${Math.max(0, daysUntil(item.endDate))}d left`;
-    else if (status === 'upcoming') metaLabel = `in ${Math.max(0, daysUntil(item.startDate))}d`;
-    else metaLabel = 'done';
-  }
+  // Right-edge meta label — shows time-to-go for the active/upcoming status.
+  let metaLabel: string;
+  if (status === 'active') metaLabel = `${Math.max(0, daysUntil(item.endDate))}d left`;
+  else if (status === 'upcoming') metaLabel = `in ${Math.max(0, daysUntil(item.startDate))}d`;
+  else metaLabel = 'done';
 
   // Decide whether the title fits inside the bar. If not, it floats just to the
   // right of the bar so the full title is always visible, never truncated.
@@ -150,30 +147,23 @@ export default function TimelineItem({ item, isOverlapping }: Props) {
   const durationWidth = measureTextWidth(metaLabel, DURATION_FONT);
   const iconsWidth = assigneeCount * 14; // w-3.5 icons
   const gapWidth = (assigneeCount > 0 ? 2 : 1) * 4; // gap-1 between bar children
-  const capWidth = VARIANT === 'board' ? 6 : 0; // status cap eats a little left room
+  const capWidth = 0; // no status cap in this view; kept in the reserved sum for clarity
   const reserved = 16 /* px-2 padding */ + iconsWidth + durationWidth + gapWidth + capWidth + 6 /* safety */;
   const titleFitsInside = titleWidth <= width - reserved;
 
   const ink = chipInk(card.color);
   const frac = elapsedFraction(item.startDate, item.endDate);
 
-  // Status emphasis per variant (opacity/filter + a status ring layered into boxShadow).
+  // Status emphasis: dim completed bars, soften upcoming ones.
   let chipOpacity = 1;
   let chipFilter = 'none';
-  if (VARIANT === 'spotlight') {
-    if (status === 'done') { chipOpacity = 0.42; chipFilter = 'grayscale(0.55)'; }
-    else if (status === 'upcoming') chipOpacity = 0.86;
-  } else if (VARIANT === 'progress') {
-    if (status === 'done') { chipOpacity = 0.5; chipFilter = 'grayscale(0.45)'; }
-    else if (status === 'upcoming') chipOpacity = 0.62;
-  }
+  if (status === 'done') { chipOpacity = 0.5; chipFilter = 'grayscale(0.45)'; }
+  else if (status === 'upcoming') chipOpacity = 0.62;
   const baseShadow = isDragging
     ? '0 12px 26px -6px rgba(33,29,22,0.45), inset 0 1px 0 rgba(255,255,255,0.3)'
     : '0 1px 2px rgba(33,29,22,0.22), inset 0 1px 0 rgba(255,255,255,0.28)';
   const rings: string[] = [];
   if (isOverlapping) rings.push('0 0 0 2px #c2562f');
-  if (VARIANT === 'spotlight' && status === 'active') { rings.push('0 0 0 2px #16a34a'); rings.push('0 0 16px rgba(22,163,74,0.5)'); }
-  if (VARIANT === 'board') rings.push(`0 0 0 2px ${sm.color}`);
   const boxShadow = [baseShadow, ...rings].join(', ');
 
   return (
@@ -205,16 +195,12 @@ export default function TimelineItem({ item, isOverlapping }: Props) {
           filter: chipFilter,
         }}
       >
-        {/* Progress: fade the not-yet-elapsed remainder so the filled part reads as progress */}
-        {VARIANT === 'progress' && status === 'active' && (
+        {/* Fade the not-yet-elapsed remainder so the filled part reads as progress */}
+        {status === 'active' && (
           <div
             className="absolute top-0 bottom-0 right-0 z-0 pointer-events-none"
             style={{ left: `${Math.round(frac * 100)}%`, backgroundColor: 'rgba(250,247,239,0.5)', borderLeft: '1.5px solid rgba(255,255,255,0.75)' }}
           />
-        )}
-        {/* Board: status-coloured cap */}
-        {VARIANT === 'board' && (
-          <div className="absolute left-0 top-0 bottom-0 w-1 z-0" style={{ backgroundColor: sm.color }} />
         )}
 
         {titleFitsInside && (

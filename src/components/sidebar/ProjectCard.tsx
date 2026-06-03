@@ -4,7 +4,6 @@ import { useProjectStore } from '../../store/useProjectStore';
 import { Pencil, Trash2, Zap, Flame } from 'lucide-react';
 import type { Assignee } from '../../types';
 import { STATUS_META, type ProjectStatus } from '../../lib/status';
-import { VARIANT } from '../../variant';
 
 const ASSIGNEE_CONFIG: Record<Assignee, { icon: typeof Zap; fill: string; stroke: string }> = {
   Yishan: { icon: Zap, fill: '#1a1a1a', stroke: '#1a1a1a' },
@@ -34,7 +33,6 @@ export default function ProjectCard({ card, onEdit, status, elapsed = 0, timeLab
 
   const sm = status ? STATUS_META[status] : null;
   const dim = status === 'done';                                   // de-emphasise completed
-  const glow = VARIANT === 'spotlight' && status === 'active';      // highlight what's running
   const pct = status === 'done' ? 100 : status === 'upcoming' ? 0 : Math.round(elapsed * 100);
 
   return (
@@ -49,7 +47,6 @@ export default function ProjectCard({ card, onEdit, status, elapsed = 0, timeLab
           ? 'cursor-default'
           : 'cursor-grab active:cursor-grabbing shadow-[0_1px_2px_rgba(33,29,22,0.06)] hover:shadow-[0_8px_22px_-8px_rgba(33,29,22,0.28)] hover:-translate-y-0.5 hover:border-[var(--ink-faint)]'}
         ${dim ? 'opacity-50 grayscale-[0.3]' : ''}
-        ${glow ? 'ring-1 ring-[#16a34a]/55 border-[#16a34a]/40' : ''}
         ${isDragging ? 'opacity-60 shadow-xl rotate-[-0.5deg]' : ''}
       `}
     >
@@ -90,7 +87,7 @@ export default function ProjectCard({ card, onEdit, status, elapsed = 0, timeLab
           )}
           <span className="inline-flex items-center gap-1.5 font-mono-num text-[11px] text-[var(--ink-2)]">
             <span className="w-2 h-2 rounded-[3px]" style={{ backgroundColor: card.color }} />
-            {VARIANT === 'progress' && timeLabel ? timeLabel : `${card.duration}d`}
+            {timeLabel ? timeLabel : `${card.duration}d`}
           </span>
           {card.assignees?.map((name) => {
             const { icon: Icon, fill, stroke } = ASSIGNEE_CONFIG[name];
@@ -103,7 +100,7 @@ export default function ProjectCard({ card, onEdit, status, elapsed = 0, timeLab
           })}
         </div>
 
-        {VARIANT === 'progress' && sm && (
+        {sm && (
           <div className="mt-2 h-1 rounded-full bg-[var(--paper-sunk)] overflow-hidden">
             <div className="h-full rounded-full transition-all" style={{ width: `${pct}%`, backgroundColor: sm.color }} />
           </div>

@@ -13,9 +13,6 @@ import { dateFromGridPixel, ROW_HEIGHT } from '../lib/timelineUtils';
 import ProjectCardPanel from './sidebar/ProjectCardPanel';
 import Timeline from './timeline/Timeline';
 import DragOverlay from './shared/DragOverlay';
-import { VARIANT } from '../variant';
-import CommandCenter from './views/CommandCenter';
-import KanbanBoard from './views/KanbanBoard';
 
 export default function App() {
   const [activeId, setActiveId] = useState<string | null>(null);
@@ -106,11 +103,6 @@ export default function App() {
       </div>
     );
   }
-
-  // Drastically different layouts per variant. Command Center & Kanban are
-  // self-contained status views (no drag-to-schedule); Focus Timeline keeps DnD.
-  if (VARIANT === 'spotlight') return <CommandCenter />;
-  if (VARIANT === 'board') return <KanbanBoard />;
 
   return (
     <DndContext
