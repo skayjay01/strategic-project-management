@@ -3,6 +3,7 @@ import type { ProjectCard as ProjectCardType } from '../../types';
 import { useProjectStore } from '../../store/useProjectStore';
 import { Pencil, Trash2, Zap, Flame } from 'lucide-react';
 import type { Assignee } from '../../types';
+import { STATUS_META, type ProjectStatus } from '../../lib/status';
 
 const ASSIGNEE_CONFIG: Record<Assignee, { icon: typeof Zap; fill: string; stroke: string }> = {
   Yishan: { icon: Zap, fill: '#1a1a1a', stroke: '#1a1a1a' },
@@ -12,9 +13,12 @@ const ASSIGNEE_CONFIG: Record<Assignee, { icon: typeof Zap; fill: string; stroke
 interface Props {
   card: ProjectCardType;
   onEdit: (card: ProjectCardType) => void;
+  status?: ProjectStatus;
+  elapsed?: number;   // 0..1, for the Progress variant's mini bar
+  timeLabel?: string; // e.g. "12d left" / "in 4d" / "done"
 }
 
-export default function ProjectCard({ card, onEdit }: Props) {
+export default function ProjectCard({ card, onEdit, status, elapsed = 0, timeLabel }: Props) {
   const isOnTimeline = useProjectStore((s) => s.isOnTimeline(card.id));
   const deleteCard = useProjectStore((s) => s.deleteCard);
 
@@ -27,6 +31,10 @@ export default function ProjectCard({ card, onEdit }: Props) {
     disabled: isOnTimeline,
   });
 
+  const sm = status ? STATUS_META[status] : null;
+  const dim = status === 'done';                                   // de-emphasise completed
+  const pct = status === 'done' ? 100 : status === 'upcoming' ? 0 : Math.round(elapsed * 100);
+
   return (
     <div
       ref={setNodeRef}
@@ -34,10 +42,11 @@ export default function ProjectCard({ card, onEdit }: Props) {
       {...attributes}
       className={`
         group relative rounded-xl bg-[var(--paper-raised)] border mb-2.5 p-3.5
-        transition-all duration-200 select-none
+        transition-all duration-200 select-none border-[var(--line-strong)]
         ${isOnTimeline
-          ? 'opacity-45 cursor-default border-[var(--line)] grayscale-[0.3]'
-          : 'cursor-grab active:cursor-grabbing border-[var(--line-strong)] shadow-[0_1px_2px_rgba(33,29,22,0.06)] hover:shadow-[0_8px_22px_-8px_rgba(33,29,22,0.28)] hover:-translate-y-0.5 hover:border-[var(--ink-faint)]'}
+          ? 'cursor-default'
+          : 'cursor-grab active:cursor-grabbing shadow-[0_1px_2px_rgba(33,29,22,0.06)] hover:shadow-[0_8px_22px_-8px_rgba(33,29,22,0.28)] hover:-translate-y-0.5 hover:border-[var(--ink-faint)]'}
+        ${dim ? 'opacity-50 grayscale-[0.3]' : ''}
         ${isDragging ? 'opacity-60 shadow-xl rotate-[-0.5deg]' : ''}
       `}
     >
@@ -46,9 +55,6 @@ export default function ProjectCard({ card, onEdit }: Props) {
         className="absolute left-0 top-3 bottom-3 w-[3px] rounded-full"
         style={{ backgroundColor: card.color }}
       />
-      {isOnTimeline && (
-        <div className="absolute top-2.5 right-3 eyebrow text-[9px] text-[var(--ink-faint)]">placed</div>
-      )}
       <div className="pl-2.5">
         <div className="flex items-start justify-between gap-2">
           <h3 className="font-display text-[15px] leading-[1.2] font-medium text-[var(--ink)] break-words min-w-0">
@@ -73,9 +79,15 @@ export default function ProjectCard({ card, onEdit }: Props) {
         </div>
 
         <div className="flex items-center flex-wrap gap-x-2.5 gap-y-1 mt-2">
+          {sm && (
+            <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full" style={{ backgroundColor: sm.soft }}>
+              <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: sm.color }} />
+              <span className="text-[9px] font-bold uppercase tracking-wide" style={{ color: sm.color }}>{sm.label}</span>
+            </span>
+          )}
           <span className="inline-flex items-center gap-1.5 font-mono-num text-[11px] text-[var(--ink-2)]">
             <span className="w-2 h-2 rounded-[3px]" style={{ backgroundColor: card.color }} />
-            {card.duration}d
+            {timeLabel ? timeLabel : `${card.duration}d`}
           </span>
           {card.assignees?.map((name) => {
             const { icon: Icon, fill, stroke } = ASSIGNEE_CONFIG[name];
@@ -87,6 +99,12 @@ export default function ProjectCard({ card, onEdit }: Props) {
             );
           })}
         </div>
+
+        {sm && (
+          <div className="mt-2 h-1 rounded-full bg-[var(--paper-sunk)] overflow-hidden">
+            <div className="h-full rounded-full transition-all" style={{ width: `${pct}%`, backgroundColor: sm.color }} />
+          </div>
+        )}
 
         {card.description && (
           <p className="text-xs text-[var(--ink-soft)] mt-1.5 line-clamp-2 leading-relaxed">

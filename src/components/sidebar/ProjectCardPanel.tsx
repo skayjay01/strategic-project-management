@@ -1,10 +1,13 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useDroppable } from '@dnd-kit/core';
 import type { ProjectCard as ProjectCardType } from '../../types';
 import { useProjectStore } from '../../store/useProjectStore';
 import ProjectCard from './ProjectCard';
 import CardEditorModal from './CardEditorModal';
 import { LayoutGrid, Plus } from 'lucide-react';
+import { getStatus, elapsedFraction, daysUntil, type ProjectStatus } from '../../lib/status';
+
+type CardInfo = { status?: ProjectStatus; elapsed?: number; timeLabel?: string };
 
 export default function ProjectCardPanel() {
   const allCards = useProjectStore((s) => s.cards);
@@ -39,6 +42,37 @@ export default function ProjectCardPanel() {
     id: 'sidebar',
     data: { type: 'sidebar' },
   });
+
+  const infoById = useMemo(() => {
+    const itemByProject = new Map(timelineItems.map((i) => [i.projectId, i] as const));
+    const map = new Map<string, CardInfo>();
+    for (const c of allCards) {
+      const it = itemByProject.get(c.id);
+      if (!it) { map.set(c.id, {}); continue; }
+      const status = getStatus(it.startDate, it.endDate);
+      const elapsed = elapsedFraction(it.startDate, it.endDate);
+      const timeLabel =
+        status === 'active' ? `${Math.max(0, daysUntil(it.endDate))}d left`
+        : status === 'upcoming' ? `in ${Math.max(0, daysUntil(it.startDate))}d`
+        : 'done';
+      map.set(c.id, { status, elapsed, timeLabel });
+    }
+    return map;
+  }, [allCards, timelineItems]);
+
+  const renderCard = (card: ProjectCardType) => {
+    const info = infoById.get(card.id) ?? {};
+    return (
+      <ProjectCard
+        key={card.id}
+        card={card}
+        onEdit={handleEdit}
+        status={info.status}
+        elapsed={info.elapsed}
+        timeLabel={info.timeLabel}
+      />
+    );
+  };
 
   const handleEdit = (card: ProjectCardType) => {
     setEditingCard(card);
@@ -89,10 +123,10 @@ export default function ProjectCardPanel() {
           drag onto the timeline
         </p>
       </div>
-      <div className="flex-1 overflow-y-auto panel-scroll px-3 py-3 stagger">
-        {cards.map((card) => (
-          <ProjectCard key={card.id} card={card} onEdit={handleEdit} />
-        ))}
+      <div className="flex-1 overflow-y-auto panel-scroll px-3 py-3">
+        <div className="stagger">
+          {cards.map(renderCard)}
+        </div>
       </div>
       {isOver && (
         <div className="px-3 py-3 text-center eyebrow text-[var(--clay-deep)] bg-[var(--clay-soft)] border-t border-[var(--clay)]">
