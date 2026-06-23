@@ -1,0 +1,9 @@
+{
+  "session_id": "d59f3559-082a-4133-89af-467f4aabf513",
+  "last_seen_head": "9c07d08d57e67c8a61cc686298b1044b8e43b72b",
+  "files": [
+    "src/components/sidebar/CardEditorModal.tsx",
+    "src/components/sidebar/ProjectCardPanel.tsx"
+  ],
+  "commits": []
+}
